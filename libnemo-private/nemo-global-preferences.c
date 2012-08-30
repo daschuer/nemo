@@ -49,6 +49,7 @@ GSettings *gnome_background_preferences;
 GSettings *gnome_media_handling_preferences;
 GSettings *gnome_terminal_preferences;
 GSettings *cinnamon_privacy_preferences;
+GSettings *gnome_interface_preferences;
 
 /*
  * Public functions
@@ -151,12 +152,14 @@ nemo_global_preferences_init (void)
 		gnome_media_handling_preferences = g_settings_new("org.cinnamon.desktop.media-handling");
 		gnome_terminal_preferences = g_settings_new("org.cinnamon.desktop.default-applications.terminal");
 		cinnamon_privacy_preferences = g_settings_new("org.cinnamon.desktop.privacy");
+	    gnome_interface_preferences = g_settings_new ("org.cinnamon.desktop.interface");
 	} else {
 		/* Gnome and Unity */ 		
 		gnome_lockdown_preferences = g_settings_new("org.gnome.desktop.lockdown");
 		gnome_background_preferences = g_settings_new("org.gnome.desktop.background");
 		gnome_media_handling_preferences = g_settings_new("org.gnome.desktop.media-handling");
 		gnome_terminal_preferences = g_settings_new("org.gnome.desktop.default-applications.terminal");
+	    gnome_interface_preferences = g_settings_new ("org.gnome.desktop.interface");
 		cinnamon_privacy_preferences = NULL;
 	}
 

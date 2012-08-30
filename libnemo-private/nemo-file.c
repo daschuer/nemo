@@ -57,6 +57,7 @@
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 #include <glib.h>
+#include <gdesktop-enums.h>
 #include <libnemo-extension/nemo-file-info.h>
 #include <libnemo-extension/nemo-extension-private.h>
 #include <libxml/parser.h>
@@ -4842,11 +4843,13 @@ nemo_file_get_trash_original_file_parent_as_string (NemoFile *file)
  * off zero padding, and putting a "_" there will use
  * space padding instead of zero padding.
  */
+#define TODAY_TIME_FORMAT_24 N_("%R")
 #define TODAY_TIME_FORMAT N_("%-I:%M %P")
 #define THIS_MONTH_TIME_FORMAT N_("%b %-e")
 #define THIS_YEAR_TIME_FORMAT N_("%b %-e")
 #define ANYTIME_TIME_FORMAT N_("%b %-d %Y")
-#define FULL_FORMAT N_("%a, %b %e %Y %H:%M:%S %p")
+#define FULL_FORMAT N_("%a, %b %e %Y %I:%M:%S %p")
+#define FULL_FORMAT_24 N_("%a, %b %e %Y %T")
 
 /**
  * nemo_file_get_date_as_string:
@@ -4868,6 +4871,8 @@ nemo_file_get_date_as_string (NemoFile *file, NemoDateType date_type, gboolean c
 	GDateTime *date_time, *today;
 	int y, m, d;
 	int y_now, m_now, d_now;
+	GDesktopClockFormat value;
+	gboolean use_24;
 
 	if (!nemo_file_get_date (file, date_type, &file_time_raw)) {
 		return NULL;
@@ -4891,10 +4896,17 @@ nemo_file_get_date_as_string (NemoFile *file, NemoDateType date_type, gboolean c
 	g_date_time_get_ymd (today, &y_now, &m_now, &d_now);
 	g_date_time_unref (today);
 
+	if (cinnamon_privacy_preferences == NULL) {
+		value = g_settings_get_enum (gnome_interface_preferences, "clock-format");
+		use_24 = value == G_DESKTOP_CLOCK_FORMAT_24H;
+	} else {
+		use_24 = g_settings_get_boolean (gnome_interface_preferences, "clock-use-24h");
+	}
+
 	if (!compact) {
-		format = FULL_FORMAT;
+		format = use_24 ? FULL_FORMAT_24 : FULL_FORMAT;
 	} else if (y == y_now && m == m_now && d == d_now) {
-		format = TODAY_TIME_FORMAT;
+		format = use_24 ? TODAY_TIME_FORMAT_24 : TODAY_TIME_FORMAT;
 	} else if (y == y_now && m == m_now) {
 		format = THIS_MONTH_TIME_FORMAT;
 	} else if (y == y_now) {

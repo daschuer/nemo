@@ -269,6 +269,7 @@ extern GSettings *gnome_background_preferences;
 extern GSettings *gnome_media_handling_preferences;
 extern GSettings *gnome_terminal_preferences;
 extern GSettings *cinnamon_privacy_preferences;
+extern GSettings *gnome_interface_preferences;
 
 gint64 nemo_startup_time;
 
