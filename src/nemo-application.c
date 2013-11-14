@@ -314,9 +314,7 @@ nemo_application_create_window (NemoApplication *application,
 
 	g_return_val_if_fail (NEMO_IS_APPLICATION (application), NULL);
 
-	window = nemo_window_new (screen);
-	gtk_application_add_window (GTK_APPLICATION (application),
-				    GTK_WINDOW (window));
+	window = nemo_window_new (GTK_APPLICATION (application), screen);
 
 	maximized = g_settings_get_boolean
 		(nemo_window_state, NEMO_WINDOW_STATE_MAXIMIZED);
@@ -342,6 +340,8 @@ nemo_application_create_window (NemoApplication *application,
 			 TRUE);
 	}
 	g_free (geometry_string);
+
+	nemo_undo_manager_attach (application->undo_manager, G_OBJECT (window));
 
 	DEBUG ("Creating a new navigation window");
 	
