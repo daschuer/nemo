@@ -95,13 +95,6 @@ static time_t desktop_dir_modify_time;
 #define get_icon_container(w) nemo_icon_view_get_icon_container(NEMO_ICON_VIEW (w))
 
 static void
-desktop_directory_changed_callback (gpointer callback_data)
-{
-	g_free (desktop_directory);
-	desktop_directory = nemo_get_desktop_directory ();
-}
-
-static void
 update_margins (NemoDesktopIconView *icon_view)
 {
     NemoIconContainer *icon_container;
@@ -224,11 +217,6 @@ nemo_desktop_icon_view_dispose (GObject *object)
 	g_signal_handlers_disconnect_by_func (nemo_desktop_preferences,
 					      font_changed_callback,
 					      icon_view);
-
-	g_signal_handlers_disconnect_by_func (nemo_preferences,
-					      desktop_directory_changed_callback,
-					      NULL);
-
 	g_signal_handlers_disconnect_by_func (gnome_lockdown_preferences,
 					      nemo_view_update_menus,
 					      icon_view);
@@ -466,10 +454,7 @@ nemo_desktop_icon_view_init (NemoDesktopIconView *desktop_icon_view)
 								  NemoDesktopIconViewDetails);
 
 	if (desktop_directory == NULL) {
-		g_signal_connect_swapped (nemo_preferences, "changed::" NEMO_PREFERENCES_DESKTOP_IS_HOME_DIR,
-					  G_CALLBACK(desktop_directory_changed_callback),
-					  NULL);
-		desktop_directory_changed_callback (NULL);
+		desktop_directory = nemo_get_desktop_directory ();
 	}
 
 	icon_container = get_icon_container (desktop_icon_view);

@@ -93,7 +93,7 @@ create_new_desktop_window (NemoDesktopManager *manager,
                                      gboolean  primary,
                                      gboolean  show_desktop)
 {
-	GtkWidget *window;
+    GtkWidget *window;
 
     DesktopInfo *info = g_slice_new0 (DesktopInfo);
 
@@ -144,10 +144,10 @@ layout_changed (NemoDesktopManager *manager)
     NemoApplication *app = NEMO_APPLICATION (g_application_get_default ());
     if (!nemo_application_get_show_desktop (app)) {
         return FALSE;
-    } 
+    }
 
     ensure_background_window ();
- 
+
     gchar *pref = g_settings_get_string (nemo_desktop_preferences, NEMO_PREFERENCES_DESKTOP_LAYOUT);
 
     if (g_strcmp0 (pref, "") == 0) {
@@ -238,13 +238,6 @@ nemo_desktop_manager_constructed (GObject *object)
                                                          G_CALLBACK (queue_update_layout),
                                                          manager);
 
-    /* Monitor the preference to have the desktop */
-    /* point to the Unix home folder */
-
-    manager->home_dir_changed_id = g_signal_connect_swapped (nemo_preferences,
-                                                             "changed::" NEMO_PREFERENCES_DESKTOP_IS_HOME_DIR,
-                                                             G_CALLBACK (queue_update_layout),
-                                                             manager);
 
     manager->orphaned_icon_handling_id = g_signal_connect_swapped (nemo_preferences,
                                                                    "changed::" NEMO_PREFERENCES_SHOW_ORPHANED_DESKTOP_ICONS,
@@ -265,7 +258,6 @@ nemo_desktop_manager_dispose (GObject *object)
     g_signal_handler_disconnect (nemo_desktop_preferences, manager->show_desktop_changed_id);
     g_signal_handler_disconnect (nemo_desktop_preferences, manager->desktop_layout_changed_id);
     g_signal_handler_disconnect (manager->screen, manager->size_changed_id);
-    g_signal_handler_disconnect (nemo_preferences, manager->home_dir_changed_id);
     g_signal_handler_disconnect (nemo_preferences, manager->orphaned_icon_handling_id);
 
     G_OBJECT_CLASS (nemo_desktop_manager_parent_class)->dispose (object);
@@ -297,7 +289,6 @@ nemo_desktop_manager_init (NemoDesktopManager *self)
     self->size_changed_id = 0;
     self->desktop_layout_changed_id = 0;
     self->show_desktop_changed_id = 0;
-    self->home_dir_changed_id = 0;
     self->cinnamon_panel_layout_changed_id = 0;
     self->orphaned_icon_handling_id = 0;
     self->scale_factor_changed_id = 0;

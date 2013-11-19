@@ -75,18 +75,6 @@ nemo_desktop_window_update_directory (NemoDesktopWindow *window)
 }
 
 static void
-nemo_desktop_window_dispose (GObject *obj)
-{
-	NemoDesktopWindow *window = NEMO_DESKTOP_WINDOW (obj);
-
-	g_signal_handlers_disconnect_by_func (nemo_preferences,
-					      nemo_desktop_window_update_directory,
-					      window);
-
-	G_OBJECT_CLASS (nemo_desktop_window_parent_class)->dispose (obj);
-}
-
-static void
 nemo_desktop_window_constructed (GObject *obj)
 {
 	GtkActionGroup *action_group;
@@ -137,6 +125,7 @@ nemo_desktop_window_constructed (GObject *obj)
     			  FALSE);
 
     gtk_widget_show (GTK_WIDGET (window));
+	nemo_desktop_window_update_directory (window);
 }
 
 static void
@@ -310,7 +299,6 @@ nemo_desktop_window_class_init (NemoDesktopWindowClass *klass)
 	GObjectClass *oclass = G_OBJECT_CLASS (klass);
 
 	oclass->constructed = nemo_desktop_window_constructed;
-	oclass->dispose = nemo_desktop_window_dispose;
     oclass->set_property = nemo_desktop_window_set_property;
     oclass->get_property = nemo_desktop_window_get_property;
 
