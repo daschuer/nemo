@@ -694,6 +694,19 @@ load_bookmark_metadata_file (NemoBookmarkList *list)
 }
 
 static void
+process_next_op (NemoBookmarkList *bookmarks);
+
+static void
+op_processed_cb (NemoBookmarkList *self)
+{
+	g_queue_pop_tail (self->pending_ops);
+
+	if (!g_queue_is_empty (self->pending_ops)) {
+		process_next_op (self);
+	}
+}
+
+static void
 load_files_finish (NemoBookmarkList *bookmarks,
                    GObject          *source,
                    GAsyncResult     *res)
@@ -805,14 +818,13 @@ load_files_thread (GTask        *task,
 }
 
 static void
-load_files_async (NemoBookmarkList    *self,
-                  GAsyncReadyCallback  callback)
+load_files_async (NemoBookmarkList *self)
 {
     GTask *task;
 
     g_object_ref (self);
 
-    task = g_task_new (self, NULL, callback, self);
+    task = g_task_new (self, NULL, load_files_finish, self);
     g_task_run_in_thread (task, load_files_thread);
 
     g_object_unref (task);
@@ -887,10 +899,12 @@ save_bookmark_metadata_file (NemoBookmarkList *list)
 }
 
 static void
-save_files_finish (NemoBookmarkList *bookmarks,
-                   GObject          *source,
-                   GAsyncResult     *res)
+save_files_finish (GObject *source,
+                   GAsyncResult *res,
+				   gpointer user_data)
 {
+	NemoBookmarkList *self = NEMO_BOOKMARK_LIST (source);
+	GFile *file;
     GError *error = NULL;
 
     g_task_propagate_boolean (G_TASK (res), &error);
@@ -901,16 +915,16 @@ save_files_finish (NemoBookmarkList *bookmarks,
         g_error_free (error);
     }
 
-    GFile *file = nemo_bookmark_list_get_file ();
+	/* re-enable bookmark file monitoring */
+	file = nemo_bookmark_list_get_file ();
+	self->monitor = g_file_monitor_file (file, 0, NULL, NULL);
+	g_object_unref (file);
 
-    /* re-enable bookmark file monitoring */
-    bookmarks->monitor = g_file_monitor_file (file, 0, NULL, NULL);
-    g_file_monitor_set_rate_limit (bookmarks->monitor, 1000);
-    g_signal_connect (bookmarks->monitor, "changed",
-                      G_CALLBACK (bookmark_monitor_changed_cb),
-                      bookmarks);
+	g_file_monitor_set_rate_limit (self->monitor, 1000);
+	g_signal_connect (self->monitor, "changed",
+			  G_CALLBACK (bookmark_monitor_changed_cb), self);
 
-    g_object_unref (file);
+	op_processed_cb (self);
 }
 
 static void
@@ -982,44 +996,40 @@ save_files_thread (GTask        *task,
 }
 
 static void
-save_files_async (NemoBookmarkList    *self,
-                  GAsyncReadyCallback  callback)
+save_files_async (NemoBookmarkList *self)
 {
     GTask *task;
+	GString *bookmark_string;
+	GList *l;
+
+	bookmark_string = g_string_new (NULL);
+
+	/* temporarily disable bookmark file monitoring when writing file */
+	if (self->monitor != NULL) {
+		g_file_monitor_cancel (self->monitor);
+		self->monitor = NULL;
+	}
+
+	for (l = self->list; l; l = l->next) {
+        NemoBookmark *bookmark;
+
+        bookmark = NEMO_BOOKMARK (l->data);
+
+        const char *label;
+        char *uri;
+        label = nemo_bookmark_get_name (bookmark);
+        uri = nemo_bookmark_get_uri (bookmark);
+        g_string_append_printf (bookmark_string,
+                    "%s %s\n", uri, label);
+        g_free (uri);
+	}
 
     g_object_ref (self);
     // G_BREAKPOINT ();
-    task = g_task_new (self, NULL, callback, self);
+    task = g_task_new (self, NULL, save_files_finish, bookmark_string);
     g_task_run_in_thread (task, save_files_thread);
 
     g_object_unref (task);
-}
-
-static void
-process_next_op (NemoBookmarkList *bookmarks);
-
-static void
-op_processed_cb (GObject      *source,
-                 GAsyncResult *res,
-                 gpointer      user_data)
-{
-	NemoBookmarkList *self = user_data;
-	int op;
-
-	op = GPOINTER_TO_INT (g_queue_pop_tail (self->pending_ops));
-
-	if (op == LOAD_JOB) {
-		load_files_finish (self, source, res);
-	} else {
-		save_files_finish (self, source, res);
-	}
-
-	if (!g_queue_is_empty (self->pending_ops)) {
-		process_next_op (self);
-	}
-
-	/* release the reference acquired during the _async method */
-	g_object_unref (self);
 }
 
 static void
@@ -1030,9 +1040,9 @@ process_next_op (NemoBookmarkList *bookmarks)
 	op = GPOINTER_TO_INT (g_queue_peek_tail (bookmarks->pending_ops));
 
 	if (op == LOAD_JOB) {
-		load_files_async (bookmarks, op_processed_cb);
+		load_files_async (bookmarks);
 	} else {
-		save_files_async (bookmarks, op_processed_cb);
+		save_files_async (bookmarks);
 	}
 }
 
