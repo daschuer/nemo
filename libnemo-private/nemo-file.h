@@ -231,8 +231,11 @@ gboolean                nemo_file_should_show_thumbnail             (NemoFile   
 gboolean                nemo_file_should_show_directory_item_count  (NemoFile                   *file);
 gboolean                nemo_file_should_show_type                  (NemoFile                   *file);
 GList *                 nemo_file_get_keywords                      (NemoFile                   *file);
-GList *                 nemo_file_get_emblem_icons                  (NemoFile                   *file,
-									 const char                          **exclude);
+GList *                 nemo_file_get_emblem_icons                  (NemoFile                   *file);
+char *                  nemo_file_get_top_left_text                 (NemoFile                   *file);
+char *                  nemo_file_peek_top_left_text                (NemoFile                   *file,
+									 gboolean                        need_large_text,
+									 gboolean                       *got_top_left_text);
 gboolean                nemo_file_get_directory_item_mime_types     (NemoFile                   *file,
 									 GList                         **mime_list);
 
