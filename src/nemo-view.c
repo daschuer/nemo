@@ -327,7 +327,6 @@ static void     clipboard_changed_callback                     (NemoClipboardMon
 static void     open_one_in_new_window                         (gpointer              data,
 								gpointer              callback_data);
 static void     schedule_update_menus                          (NemoView      *view);
-static void     schedule_update_menus_callback                 (gpointer              callback_data);
 static void     remove_update_menus_timeout_callback           (NemoView      *view);
 static void     schedule_update_status                          (NemoView      *view);
 static void     remove_update_status_idle_callback             (NemoView *view); 
@@ -2692,6 +2691,10 @@ static void
 undo_manager_changed_cb (NemoFileUndoManager* manager,
 			 NemoView *view)
 {
+	if (!view->details->active) {
+		return;
+	}
+
 	update_undo_actions (view);
 }
 
@@ -2748,7 +2751,7 @@ nemo_view_init (NemoView *view)
 	NemoDirectory *scripts_directory;
 	NemoDirectory *templates_directory;
 	char *templates_uri;
-	NemoFileUndoManager* manager;
+
 	view->details = G_TYPE_INSTANCE_GET_PRIVATE (view, NEMO_TYPE_VIEW,
 						     NemoViewDetails);
 
@@ -2810,7 +2813,7 @@ nemo_view_init (NemoView *view)
 
 	g_signal_connect_swapped (nemo_preferences,
 				  "changed::" NEMO_PREFERENCES_ENABLE_DELETE,
-				  G_CALLBACK (schedule_update_menus_callback), view);
+				  G_CALLBACK (schedule_update_menus), view);
     g_signal_connect_swapped (nemo_preferences,
                   "changed::" NEMO_PREFERENCES_SWAP_TRASH_DELETE,
                   G_CALLBACK (swap_delete_keybinding_changed_callback), view);
@@ -2846,8 +2849,7 @@ nemo_view_init (NemoView *view)
                               "changed::" NEMO_PREFERENCES_CONTEXT_MENUS_SHOW_ALL_ACTIONS,
                               G_CALLBACK (schedule_update_menus), view);
 
-	manager = nemo_file_undo_manager_get ();
-	g_signal_connect_object (manager, "undo-changed",
+	g_signal_connect_object (nemo_file_undo_manager_get (), "undo-changed",
 				 G_CALLBACK (undo_manager_changed_cb), view, 0);				  
 
     g_signal_connect (nemo_plugin_preferences,
@@ -3017,7 +3019,7 @@ nemo_view_finalize (GObject *object)
 	view = NEMO_VIEW (object);
 
 	g_signal_handlers_disconnect_by_func (nemo_preferences,
-					      schedule_update_menus_callback, view);
+					      schedule_update_menus, view);
 	g_signal_handlers_disconnect_by_func (nemo_preferences,
 					      click_policy_changed_callback, view);
     g_signal_handlers_disconnect_by_func (nemo_preferences,
@@ -10643,12 +10645,6 @@ real_using_manual_layout (NemoView *view)
 	g_return_val_if_fail (NEMO_IS_VIEW (view), FALSE);
 
 	return FALSE;
-}
-
-static void
-schedule_update_menus_callback (gpointer callback_data)
-{
-	schedule_update_menus (NEMO_VIEW (callback_data));
 }
 
 void
