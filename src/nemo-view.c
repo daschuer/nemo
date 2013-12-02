@@ -2395,7 +2395,6 @@ swap_delete_keybinding_changed_callback (gpointer callback_data)
 static gboolean
 set_up_scripts_directory_global (void)
 {
-	char *old_scripts_directory_path;
 	char *scripts_directory_path;
 
 	if (scripts_directory_uri != NULL) {
@@ -2410,7 +2409,6 @@ set_up_scripts_directory_global (void)
 	}
 
 	g_free (scripts_directory_path);
-	g_free (old_scripts_directory_path);
 
 	return (scripts_directory_uri != NULL) ? TRUE : FALSE;
 }

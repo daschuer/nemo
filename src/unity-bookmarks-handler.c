@@ -32,6 +32,7 @@
 #include "nemo-window-private.h"
 
 #include <eel/eel-string.h>
+#include <gdk/gdkx.h>
 
 #include <gdk/gdkx.h>
 

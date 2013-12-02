@@ -1369,7 +1369,7 @@ nemo_path_bar_check_icon_theme (NemoPathBar *path_bar)
 }
 
 /* Public functions and their helpers */
-void
+static void
 nemo_path_bar_clear_buttons (NemoPathBar *path_bar)
 {
     while (path_bar->priv->button_list != NULL) {

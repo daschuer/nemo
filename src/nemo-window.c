@@ -551,9 +551,10 @@ nemo_window_constructed (GObject *self)
     GdkRGBA transparent = {0, 0, 0, 0};
 
 	window = NEMO_WINDOW (self);
-	application = nemo_application_get_singleton ();
 
 	G_OBJECT_CLASS (nemo_window_parent_class)->constructed (self);
+
+	application = NEMO_APPLICATION (g_application_get_default ());
 	gtk_window_set_application (GTK_WINDOW (window), GTK_APPLICATION (application));
 
 	/* disable automatic menubar handling, since we show our regular

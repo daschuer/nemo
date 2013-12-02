@@ -1381,7 +1381,7 @@ nemo_application_class_init (NemoApplicationClass *class)
 }
 
 NemoApplication *
-nemo_application_get_singleton (void)
+nemo_application_new (void)
 {
 	return g_object_new (NEMO_TYPE_APPLICATION,
                          "application-id", "org.Nemo",

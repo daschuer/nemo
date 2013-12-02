@@ -123,7 +123,7 @@ create_new_desktop_window (NemoDesktopManager *manager,
                                                              manager);
     }
 
-    gtk_application_add_window (GTK_APPLICATION (nemo_application_get_singleton ()),
+    gtk_application_add_window (GTK_APPLICATION (g_application_get_default ()),
                                 GTK_WINDOW (window));
 
     manager->desktops = g_list_append (manager->desktops, info);

@@ -2325,7 +2325,7 @@ nemo_list_view_add_file (NemoView *view, NemoFile *file, NemoDirectory *director
 	NemoListModel *model;
 
     if (nemo_file_has_thumbnail_access_problem (file)) {
-        nemo_application_set_cache_flag (nemo_application_get_singleton ());
+        nemo_application_set_cache_flag (NEMO_APPLICATION (g_application_get_default ()));
         nemo_window_slot_check_bad_cache_bar (nemo_view_get_nemo_window_slot (view));
     }
 
