@@ -155,11 +155,11 @@ schedule_update_info (NemoTrashMonitor *trash_monitor)
 	GFile *location;
 
 	location = g_file_new_for_uri ("trash:///");
-        g_file_query_info_async (location,
-                                 G_FILE_ATTRIBUTE_TRASH_ITEM_COUNT,
-                                 G_FILE_QUERY_INFO_NONE,
-                                 G_PRIORITY_DEFAULT, NULL,
-                                 trash_query_info_cb, g_object_ref (trash_monitor));
+	g_file_query_info_async (location,
+	                         G_FILE_ATTRIBUTE_TRASH_ITEM_COUNT,
+	                         G_FILE_QUERY_INFO_NONE,
+	                         G_PRIORITY_DEFAULT, NULL,
+	                         trash_query_info_cb, g_object_ref (trash_monitor));
 	
 	g_object_unref (location);
 }
