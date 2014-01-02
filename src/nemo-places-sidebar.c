@@ -2470,7 +2470,8 @@ open_selected_bookmark (NemoPlacesSidebar *sidebar,
 
 			sidebar->go_to_after_mount_flags = flags;
 
-			nemo_file_operations_mount_volume_full (NULL, volume,
+			nemo_file_operations_mount_volume_full (GTK_WINDOW (gtk_widget_get_toplevel (GTK_WIDGET (sidebar))),
+								    volume,
 								    volume_mounted_cb,
 								    G_OBJECT (sidebar));
 		} else if (volume == NULL && drive != NULL &&
@@ -2656,7 +2657,7 @@ mount_shortcut_cb (GtkMenuItem           *item,
 			    -1);
 
 	if (volume != NULL) {
-		nemo_file_operations_mount_volume (NULL, volume);
+		nemo_file_operations_mount_volume (GTK_WINDOW (gtk_widget_get_toplevel (GTK_WIDGET (sidebar))), volume);
 		g_object_unref (volume);
 	}
 }
