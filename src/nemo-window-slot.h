@@ -108,6 +108,7 @@ struct NemoWindowSlot {
 	gboolean tried_mount;
 	NemoWindowGoToCallback open_callback;
 	gpointer open_callback_user_data;
+	gboolean load_with_search;
 
 	GCancellable *find_mount_cancellable;
 
