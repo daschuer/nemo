@@ -1379,8 +1379,8 @@ static void
 update_for_new_location (NemoWindowSlot *slot)
 {
 	NemoWindow *window;
-        GFile *new_location;
-        NemoFile *file;
+	GFile *new_location;
+	NemoFile *file;
 	NemoDirectory *directory;
 	gboolean location_really_changed;
 	FindMountData *data;
