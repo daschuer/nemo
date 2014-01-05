@@ -14,19 +14,17 @@
  *
  * You should have received a copy of the GNU General Public
  * License along with this program; see the file COPYING.  If not,
- * see <http://www.gnu.org/licenses/>.
+ * write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
  *
  */
 
 #include <config.h>
 
 #include <string.h>
-#include <gio/gio.h>
 
 #include "nemo-search-hit.h"
 #include "nemo-query.h"
-#define DEBUG_FLAG NEMO_DEBUG_SEARCH_HIT
-#include "nemo-debug.h"
 
 struct NemoSearchHitDetails
 {
@@ -56,8 +54,8 @@ nemo_search_hit_compute_scores (NemoSearchHit *hit,
 {
 	GDateTime *now;
 	char *query_uri;
-	GFile *query_location;
-	GFile *hit_location;
+	char *query_path;
+	int i;
 	GTimeSpan m_diff = G_MAXINT64;
 	GTimeSpan a_diff = G_MAXINT64;
 	GTimeSpan t_diff = G_MAXINT64;
@@ -66,28 +64,31 @@ nemo_search_hit_compute_scores (NemoSearchHit *hit,
 	gdouble match_bonus = 0.0;
 
 	query_uri = nemo_query_get_location (query);
-	query_location = g_file_new_for_uri (query_uri);
-	hit_location = g_file_new_for_uri (hit->details->uri);
+	query_path = g_filename_from_uri (query_uri, NULL, NULL);
+	g_free (query_uri);
+	if (query_path != NULL) {
+		char *hit_path;
+		char *hit_parent;
+		guint dir_count;
 
-	if (g_file_has_prefix (hit_location, query_location)) {
-		GFile *parent, *location;
-		guint dir_count = 0;
+		hit_path = g_filename_from_uri (hit->details->uri, NULL, NULL);
+		hit_parent = g_path_get_dirname (hit_path);
+		g_free (hit_path);
 
-		parent = g_file_get_parent (hit_location);
-
-		while (!g_file_equal (parent, query_location)) {
-			dir_count++;
-			location = parent;
-			parent = g_file_get_parent (location);
-			g_object_unref (location);
+		dir_count = 0;
+		for (i = strlen (query_path); hit_parent[i] != '\0'; i++) {
+			if (G_IS_DIR_SEPARATOR (hit_parent[i]))
+				dir_count++;
 		}
-		g_object_unref (parent);
+		g_free (hit_parent);
 
 		if (dir_count < 10) {
-			proximity_bonus = 10000.0 - 1000.0 * dir_count;
+			proximity_bonus = 100.0 - 10 * dir_count;
+		} else {
+			proximity_bonus = 0.0;
 		}
 	}
-	g_object_unref (hit_location);
+	g_free (query_path);
 
 	now = g_date_time_new_now_local ();
 	if (hit->details->modification_time != NULL)
@@ -112,18 +113,14 @@ nemo_search_hit_compute_scores (NemoSearchHit *hit,
 	}
 
 	if (hit->details->fts_rank > 0) {
-		match_bonus = MIN (500, 10.0 * hit->details->fts_rank);
+		match_bonus = 10.0 * hit->details->fts_rank;
 	} else {
 		match_bonus = 0.0;
 	}
 
 	hit->details->relevance = recent_bonus + proximity_bonus + match_bonus;
-	DEBUG ("Hit %s computed relevance %.2f (%.2f + %.2f + %.2f)", hit->details->uri, hit->details->relevance,
-	       proximity_bonus, recent_bonus, match_bonus);
 
 	g_date_time_unref (now);
-	g_free (query_uri);
-	g_object_unref (query_location);
 }
 
 const char *
@@ -190,7 +187,6 @@ nemo_search_hit_set_property (GObject *object,
 	switch (arg_id) {
 	case PROP_RELEVANCE:
 		hit->details->relevance = g_value_get_double (value);
-		break;
 	case PROP_FTS_RANK:
 		nemo_search_hit_set_fts_rank (hit, g_value_get_double (value));
 		break;
