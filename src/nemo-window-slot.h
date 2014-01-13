@@ -95,6 +95,7 @@ struct NemoWindowSlot {
 	GtkWidget *query_editor_revealer;
 	gulong qe_changed_id;
 	gulong qe_cancel_id;
+	gulong qe_activated_id;
 
 	/* New location. */
 	NemoLocationChangeType location_change_type;
