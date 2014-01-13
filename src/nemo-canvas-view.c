@@ -78,6 +78,7 @@ enum
 	PROP_SUPPORTS_AUTO_LAYOUT,
 	PROP_IS_DESKTOP,
 	PROP_SUPPORTS_KEEP_ALIGNED,
+	PROP_SUPPORTS_MANUAL_LAYOUT,
 	PROP_SUPPORTS_LABELS_BESIDE_ICONS,
 	NUM_PROPERTIES
 };
@@ -118,6 +119,7 @@ struct NemoCanvasViewDetails
 	GtkWidget *canvas_container;
 
 	gboolean supports_auto_layout;
+	gboolean supports_manual_layout;
 	gboolean is_desktop;
 	gboolean supports_keep_aligned;
 	gboolean supports_labels_beside_icons;
@@ -173,6 +175,7 @@ static void                 nemo_canvas_view_set_zoom_level               (NemoC
 									     NemoZoomLevel     new_level,
 									     gboolean              always_emit);
 static void                 nemo_canvas_view_update_click_mode            (NemoCanvasView           *canvas_view);
+static void                 nemo_canvas_view_update_click_to_rename_mode  (NemoCanvasView           *canvas_view);
 static void                 nemo_canvas_view_set_directory_tighter_layout (NemoCanvasView           *canvas_view,
                                         NemoFile         *file,
                                         gboolean              tighter_layout);
@@ -237,7 +240,7 @@ nemo_canvas_view_supports_manual_layout (NemoCanvasView *view)
 {
 	g_return_val_if_fail (NEMO_IS_CANVAS_VIEW (view), FALSE);
 
-	return !nemo_canvas_view_is_compact (view);
+	return !nemo_canvas_view_is_compact (view) && view->details->supports_manual_layout;
 }
 
 static gboolean
@@ -471,36 +474,6 @@ nemo_canvas_view_clear (NemoView *view)
 	nemo_canvas_container_clear (canvas_container);
 	g_slist_foreach (file_list, (GFunc)unref_cover, NULL);
 	g_slist_free (file_list);
-}
-
-static gboolean
-should_show_file_on_screen (NemoView *view, NemoFile *file)
-{
-	char *screen_string;
-	int screen_num;
-	NemoCanvasView *canvas_view;
-	GdkScreen *screen;
-
-	canvas_view = NEMO_CANVAS_VIEW (view);
-
-	if (!nemo_view_should_show_file (view, file)) {
-		return FALSE;
-	}
-	
-	/* Get the screen for this canvas from the metadata. */
-	screen_string = nemo_file_get_metadata
-		(file, NEMO_METADATA_KEY_SCREEN, "0");
-	screen_num = atoi (screen_string);
-	g_free (screen_string);
-	screen = gtk_widget_get_screen (GTK_WIDGET (view));
-
-	if (screen_num != gdk_screen_get_number (screen) &&
-	    (screen_num < canvas_view->details->num_screens ||
-	     gdk_screen_get_number (screen) > 0)) {
-		return FALSE;
-	}
-
-	return TRUE;
 }
 
 static void
@@ -1535,7 +1508,7 @@ nemo_canvas_view_merge_menus (NemoView *view)
 	g_object_unref (action_group); /* owned by ui manager */
 
 	canvas_view->details->canvas_merge_id =
-		gtk_ui_manager_add_ui_from_resource (ui_manager, "/org/nemo/nemo-icon-view-ui.xml", NULL);
+		gtk_ui_manager_add_ui_from_resource (ui_manager, "/org/nemo/nemo-canvas-view-ui.xml", NULL);
 
 	/* Do one-time state-setting here; context-dependent state-setting
 	 * is done in update_menus.
@@ -1545,28 +1518,6 @@ nemo_canvas_view_merge_menus (NemoView *view)
 						      NEMO_ACTION_ARRANGE_ITEMS);
 		gtk_action_set_visible (action, FALSE);
 	}
-
-<<<<<<< nemo_312_merge_rebase5:src/nemo-icon-view.c
-	if (nemo_icon_view_is_desktop (icon_view)) {
-=======
-	if (nemo_canvas_view_supports_scaling (canvas_view)) {
->>>>>>> HEAD~438:src/nautilus-canvas-view.c
-		gtk_ui_manager_add_ui (ui_manager,
-				       canvas_view->details->canvas_merge_id,
-				       POPUP_PATH_CANVAS_APPEARANCE,
-				       NEMO_ACTION_STRETCH,
-				       NEMO_ACTION_STRETCH,
-				       GTK_UI_MANAGER_MENUITEM,
-				       FALSE);
-		gtk_ui_manager_add_ui (ui_manager,
-				       canvas_view->details->canvas_merge_id,
-				       POPUP_PATH_CANVAS_APPEARANCE,
-				       NEMO_ACTION_UNSTRETCH,
-				       NEMO_ACTION_UNSTRETCH,
-				       GTK_UI_MANAGER_MENUITEM,
-				       FALSE);
-	}
-
 	update_layout_menus (canvas_view);
 }
 
@@ -1612,7 +1563,7 @@ nemo_canvas_view_update_menus (NemoView *view)
 				  && !nemo_canvas_container_has_stretch_handles (canvas_container));
 
 	gtk_action_set_visible (action,
-				nemo_canvas_view_is_desktop (icon_view));
+				nemo_canvas_view_is_desktop (canvas_view));
 
 	action = gtk_action_group_get_action (canvas_view->details->canvas_action_group,
 					      NEMO_ACTION_UNSTRETCH);
@@ -1626,7 +1577,7 @@ nemo_canvas_view_update_menus (NemoView *view)
 				  && nemo_canvas_container_is_stretched (canvas_container));
 
 	gtk_action_set_visible (action,
-				nemo_canvas_view_is_desktop (icon_view));
+				nemo_canvas_view_is_desktop (canvas_view));
 
 	editable = nemo_view_is_editable (view);
 	action = gtk_action_group_get_action (canvas_view->details->canvas_action_group,
@@ -1874,45 +1825,6 @@ compare_files (NemoView   *canvas_view,
 	       NemoFile *b)
 {
 	return nemo_canvas_view_compare_files ((NemoCanvasView *)canvas_view, a, b);
-}
-
-static void
-nemo_canvas_view_screen_changed (GtkWidget *widget,
-				   GdkScreen *previous_screen)
-{
-	NemoView *view;
-	GList *files, *l;
-	NemoFile *file;
-	NemoDirectory *directory;
-	NemoCanvasContainer *canvas_container;
-
-	if (GTK_WIDGET_CLASS (nemo_canvas_view_parent_class)->screen_changed) {
-		GTK_WIDGET_CLASS (nemo_canvas_view_parent_class)->screen_changed (widget, previous_screen);
-	}
-
-	view = NEMO_VIEW (widget);
-	if (NEMO_CANVAS_VIEW (view)->details->is_desktop) {
-		canvas_container = get_icon_container (NEMO_CANVAS_VIEW (view));
-
-		directory = nemo_view_get_model (view);
-		files = nemo_directory_get_file_list (directory);
-
-		for (l = files; l != NULL; l = l->next) {
-			file = l->data;
-			
-			if (!should_show_file_on_screen (view, file)) {
-				nemo_canvas_view_remove_file (view, file, directory);
-			} else {
-				if (nemo_canvas_container_add (canvas_container,
-								 NEMO_CANVAS_ICON_DATA (file))) {
-					nemo_file_ref (file);
-				}
-			}
-		}
-		
-		nemo_file_list_unref (files);
-		g_list_free (files);
-	}
 }
 
 static gboolean
@@ -2337,17 +2249,17 @@ nemo_canvas_view_update_click_mode (NemoCanvasView *canvas_view)
 }
 
 static void
-nemo_icon_view_update_click_to_rename_mode (NemoIconView *icon_view)
+nemo_canvas_view_update_click_to_rename_mode (NemoCanvasView *canvas_view)
 {
-    NemoIconContainer   *icon_container;
+    NemoCanvasContainer   *canvas_container;
     gboolean enabled;
 
-    icon_container = get_icon_container (icon_view);
-    g_assert (icon_container != NULL);
+    canvas_container = get_canvas_container (canvas_view);
+    g_assert (canvas_container != NULL);
 
     enabled = g_settings_get_boolean (nemo_preferences, NEMO_PREFERENCES_CLICK_TO_RENAME);
 
-    nemo_icon_container_set_click_to_rename_enabled (icon_container,
+    nemo_canvas_container_set_click_to_rename_enabled (canvas_container,
                                                      enabled);
 }
 
@@ -2709,7 +2621,6 @@ nemo_canvas_view_class_init (NemoCanvasViewClass *klass)
 	oclass->finalize = nemo_canvas_view_finalize;
 
 	GTK_WIDGET_CLASS (klass)->destroy = nemo_canvas_view_destroy;
-	GTK_WIDGET_CLASS (klass)->screen_changed = nemo_canvas_view_screen_changed;
 	GTK_WIDGET_CLASS (klass)->scroll_event = nemo_canvas_view_scroll_event;
 	
 	nemo_view_class->add_file = nemo_canvas_view_add_file;
@@ -2762,6 +2673,13 @@ nemo_canvas_view_class_init (NemoCanvasViewClass *klass)
 				      "Supports auto layout",
 				      "Whether this view supports auto layout",
 				      TRUE,
+				      G_PARAM_WRITABLE |
+				      G_PARAM_CONSTRUCT_ONLY);
+	properties[PROP_SUPPORTS_MANUAL_LAYOUT] =
+		g_param_spec_boolean ("supports-manual-layout",
+				      "Supports manual layout",
+				      "Whether this view supports manual layout",
+				      FALSE,
 				      G_PARAM_WRITABLE |
 				      G_PARAM_CONSTRUCT_ONLY);
 	properties[PROP_IS_DESKTOP] =

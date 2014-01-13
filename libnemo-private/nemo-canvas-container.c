@@ -208,8 +208,8 @@ static int compare_icons_vertical (NemoCanvasContainer *container,
 static void store_layout_timestamps_now (NemoCanvasContainer *container);
 static void remove_search_entry_timeout (NemoCanvasContainer *container);
 
-static gboolean handle_icon_slow_two_click (NemoIconContainer *container,
-                                            NemoIcon *icon,
+static gboolean handle_canvas_slow_two_click (NemoCanvasContainer *container,
+                                            NemoCanvasIcon *icon,
                                             GdkEventButton *event);
 
 static const char *nemo_canvas_container_accessible_action_names[] = {
@@ -285,11 +285,11 @@ tooltip_prefs_changed_callback (NemoCanvasContainer *container)
     nemo_canvas_container_request_update_all (container);
 }
 
-/* Functions dealing with NemoIcons.  */
+/* Functions dealing with NemoCanvasIcons.  */
 
 static gboolean
-clicked_on_text (NemoIconContainer *container,
-                          NemoIcon *icon,
+clicked_on_text (NemoCanvasContainer *container,
+                          NemoCanvasIcon *icon,
                     GdkEventButton *event)
 {
     if (icon == NULL)
@@ -298,7 +298,7 @@ clicked_on_text (NemoIconContainer *container,
     double eventX, eventY;
     EelDRect icon_rect;
 
-    icon_rect = nemo_icon_canvas_item_get_text_rectangle (icon->item, TRUE);
+    icon_rect = nemo_canvas_item_get_text_rectangle (icon->item, TRUE);
     eel_canvas_window_to_world (EEL_CANVAS (container), event->x, event->y, &eventX, &eventY);
 
     gboolean ret =  (eventX > icon_rect.x0) &&
@@ -310,8 +310,8 @@ clicked_on_text (NemoIconContainer *container,
 }
 
 static gboolean
-clicked_on_icon (NemoIconContainer *container,
-                          NemoIcon *icon,
+clicked_on_icon (NemoCanvasContainer *container,
+                          NemoCanvasIcon *icon,
                     GdkEventButton *event)
 {
     if (icon == NULL)
@@ -320,7 +320,7 @@ clicked_on_icon (NemoIconContainer *container,
     double eventX, eventY;
     EelDRect icon_rect;
 
-    icon_rect = nemo_icon_canvas_item_get_icon_rectangle (icon->item);
+    icon_rect = nemo_canvas_item_get_icon_rectangle (icon->item);
     eel_canvas_window_to_world (EEL_CANVAS (container), event->x, event->y, &eventX, &eventY);
 
     gboolean ret =  (eventX > icon_rect.x0) &&
@@ -371,7 +371,7 @@ icon_set_position (NemoCanvasIcon *icon,
 		end_renaming_mode (container, TRUE);
 	}
 
-	if (nemo_icon_container_get_is_fixed_size (container)) {
+	if (nemo_canvas_container_get_is_fixed_size (container)) {
         GtkAllocation alloc;
 
         gtk_widget_get_allocation (GTK_WIDGET (container), &alloc);
@@ -4313,7 +4313,7 @@ button_press_event (GtkWidget *widget,
     	}
 
     if (clicked_on_item) {
-        NemoIcon *icon; // current icon which was clicked on
+        NemoCanvasIcon *icon; // current icon which was clicked on
 
         /* when icon is in renaming mode and user clicks on the image part of icon renaming should get closed */
         icon = get_first_selected_icon (container); // this function gets the clicked icon
@@ -4456,9 +4456,9 @@ nemo_canvas_container_did_not_drag (NemoCanvasContainer *container,
 	}
 
     if (details->drag_icon != NULL &&
-        handle_icon_slow_two_click (container, details->drag_icon, event)) {
+        handle_canvas_slow_two_click (container, details->drag_icon, event)) {
         if (!details->skip_rename_on_release)
-            nemo_icon_container_start_renaming_selected_item (container, FALSE);
+            nemo_canvas_container_start_renaming_selected_item (container, FALSE);
     }
 }
 
@@ -4495,7 +4495,7 @@ clicked_within_double_click_interval (NemoCanvasContainer *container)
 }
 
 static gboolean
-clicked_within_slow_click_interval_on_text (NemoIconContainer *container, NemoIcon *icon, GdkEventButton *event)
+clicked_within_slow_click_interval_on_text (NemoCanvasContainer *container, NemoCanvasIcon *icon, GdkEventButton *event)
 {
     static gint64 last_slow_click_time = 0;
     static gint slow_click_count = 0;
@@ -4911,7 +4911,7 @@ nemo_canvas_container_search_position_func (NemoCanvasContainer *container,
 
 	gtk_widget_get_preferred_size (search_dialog, &requisition, NULL);
 
-    if (nemo_icon_container_get_is_desktop (container)) {
+    if (nemo_canvas_container_get_is_desktop (container)) {
         x = cont_x + cont_width - requisition.width;
         y = cont_y + cont_height - requisition.height;
     } else {
@@ -6436,7 +6436,7 @@ handle_canvas_button_press (NemoCanvasContainer *container,
 	 */
 	details->icon_selected_on_button_down = icon->is_selected;
 
-    GList *sel = nemo_icon_container_get_selected_icons (container);
+    GList *sel = nemo_canvas_container_get_selected_icons (container);
     details->skip_rename_on_release = g_list_length (sel) > 1;
     g_list_free (sel);
 
@@ -7222,7 +7222,7 @@ finish_adding_new_icons (NemoCanvasContainer *container)
 	no_position_icons = semi_position_icons = NULL;
 	for (p = new_icons; p != NULL; p = p->next) {
 		icon = p->data;
-        nemo_icon_container_update_icon (container, icon);
+        nemo_canvas_container_update_icon (container, icon);
 		if (icon->has_lazy_position) {
 			assign_icon_position (container, icon);
 			semi_position_icons = g_list_prepend (semi_position_icons, icon);
@@ -7258,7 +7258,7 @@ finish_adding_new_icons (NemoCanvasContainer *container)
 		now = time (NULL);
 
 		for (p = semi_position_icons; p != NULL; p = p->next) {
-			NemoCanvasIcon *icon;
+			NemoCanvasPosition position;
 			int x, y;
 
 			icon = p->data;
@@ -8792,8 +8792,6 @@ typedef EelCanvasAccessibleClass NemoCanvasContainerAccessibleClass;
 
 #define GET_ACCESSIBLE_PRIV(o) ((NemoCanvasContainerAccessible *) o)->priv
 
-#define GET_ACCESSIBLE_PRIV(o) ((NemoIconContainerAccessible *) o)->priv
-
 /* AtkAction interface */
 static gboolean
 nemo_canvas_container_accessible_do_action (AtkAction *accessible, int i)
@@ -9068,8 +9066,6 @@ nemo_canvas_container_accessible_get_selection_count (AtkSelection *accessible)
 	nemo_canvas_container_accessible_update_selection (ATK_OBJECT (accessible));
 	count = g_list_length (priv->selection);
 
-	count = g_list_length (priv->selection);
-
 	return count;
 }
 
@@ -9300,6 +9296,7 @@ nemo_canvas_container_accessible_init (NemoCanvasContainerAccessible *self)
 static void
 nemo_canvas_container_accessible_class_init (NemoCanvasContainerAccessibleClass *klass)
 {
+	AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
 	GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
 	gobject_class->finalize = nemo_canvas_container_accessible_finalize;
