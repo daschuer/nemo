@@ -62,6 +62,7 @@
 #include <libnemo-private/nemo-file-attributes.h>
 #include <libnemo-private/nemo-global-preferences.h>
 #include <libnemo-private/nemo-metadata.h>
+#include <libnemo-private/nemo-profile.h>
 #include <libnemo-private/nemo-clipboard.h>
 #include <libnemo-private/nemo-search-directory.h>
 #include <libnemo-private/nemo-signaller.h>
@@ -551,6 +552,8 @@ nemo_window_constructed (GObject *self)
 
 	window = NEMO_WINDOW (self);
 
+	nemo_profile_start (NULL);
+
 	G_OBJECT_CLASS (nemo_window_parent_class)->constructed (self);
 
 	application = NEMO_APPLICATION (g_application_get_default ());
@@ -684,6 +687,8 @@ nemo_window_constructed (GObject *self)
     if (g_settings_get_boolean (nemo_preferences, NEMO_PREFERENCES_START_WITH_DUAL_PANE) &&
         !window->details->disable_chrome)
         nemo_window_split_view_on (window);
+
+	nemo_profile_end (NULL);
 }
 
 static void
