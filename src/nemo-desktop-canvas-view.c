@@ -572,6 +572,7 @@ nemo_desktop_canvas_view_create (NemoWindowSlot *slot)
 			     "window-slot", slot,
 			     "supports-zooming", FALSE,
 			     "supports-auto-layout", FALSE,
+			     "supports-manual-layout", TRUE,
 			     "is-desktop", TRUE,
 			     "supports-keep-aligned", TRUE,
 			     "supports-labels-beside-icons", FALSE,

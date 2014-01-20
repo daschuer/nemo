@@ -683,6 +683,8 @@ update_layout_menus (NemoCanvasView *view)
 	action = gtk_action_group_get_action (view->details->canvas_action_group,
 					      NEMO_ACTION_CLEAN_UP);
 	gtk_action_set_sensitive (action, !is_auto_layout);	
+	gtk_action_set_visible (action,
+				nemo_canvas_view_supports_manual_layout (view));
 
 	if (nemo_canvas_view_is_desktop (view)) {
 		gtk_action_set_label (action, _("_Organize Desktop by Name"));
