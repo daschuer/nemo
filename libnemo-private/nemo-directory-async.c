@@ -1983,7 +1983,7 @@ read_dot_hidden_file (NemoDirectory *directory)
 			char *hidden_filename;
 		
 			hidden_filename = g_strndup (file_contents + start, i - start);
-			g_hash_table_insert (directory->details->hidden_file_hash,
+			g_hash_table_replace (directory->details->hidden_file_hash,
 					     hidden_filename, hidden_filename);
 		}
 
@@ -2152,7 +2152,7 @@ start_monitoring_file_list (NemoDirectory *directory)
 		}
 		
 		fn = g_strdup (kde_trash_dir_name);
-		g_hash_table_insert (directory->details->hidden_file_hash,
+		g_hash_table_replace (directory->details->hidden_file_hash,
 				     fn, fn);
 	}
 
