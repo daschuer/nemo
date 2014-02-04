@@ -98,7 +98,7 @@ new_bookmark_from_uri (const char *uri, const char *label, NemoBookmarkMetadata 
 	new_bookmark = NULL;
 
 	if (location) {
-		new_bookmark = nemo_bookmark_new (location, label, NULL, md);
+		new_bookmark = nemo_bookmark_new (location, label, md);
 		g_object_unref (location);
 	}
 

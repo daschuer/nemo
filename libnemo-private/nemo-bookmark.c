@@ -643,7 +643,6 @@ nemo_bookmark_copy (NemoBookmark *bookmark)
     return nemo_bookmark_new (bookmark->details->location,
                               bookmark->details->has_custom_name ?
                                   bookmark->details->name : NULL,
-                              bookmark->details->icon,
                               bookmark->details->metadata ?
                                   nemo_bookmark_metadata_copy (bookmark->details->metadata) : NULL);
 }
@@ -693,25 +692,23 @@ nemo_bookmark_get_uri (NemoBookmark *bookmark)
 NemoBookmark *
 nemo_bookmark_new (GFile                *location,
                    const gchar          *custom_name,
-                   GIcon                *icon,
                    NemoBookmarkMetadata *md)
 {
 	NemoBookmark *new_bookmark;
-    gchar *name;
+	gchar *name;
 
-    if (custom_name == NULL)
-        name = g_file_get_basename (location);
-    else
-        name = g_strdup (custom_name);
+	if (custom_name == NULL)
+		name = g_file_get_basename (location);
+	else
+		name = g_strdup (custom_name);
 
 	new_bookmark = NEMO_BOOKMARK (g_object_new (NEMO_TYPE_BOOKMARK,
 							"location", location,
-							"icon", icon,
 							"name", name,
 							"custom-name", custom_name != NULL,
-                            "metadata", md,
+							"metadata", md,
 							NULL));
-    g_free (name);
+	g_free (name);
 
     return new_bookmark;
 }

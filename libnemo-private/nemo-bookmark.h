@@ -76,7 +76,6 @@ typedef struct NemoBookmarkClass NemoBookmarkClass;
 GType                 nemo_bookmark_get_type               (void);
 NemoBookmark *    nemo_bookmark_new                    (GFile                *location,
                                                         const char           *custom_name,
-                                                        GIcon                *icon,
                                                         NemoBookmarkMetadata *md);
 NemoBookmark *    nemo_bookmark_copy                   (NemoBookmark      *bookmark);
 const char *          nemo_bookmark_get_name               (NemoBookmark      *bookmark);
