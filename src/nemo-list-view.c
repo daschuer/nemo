@@ -769,7 +769,7 @@ columns_reordered_callback (AtkObject *atk,
     directory = nemo_view_get_model (NEMO_VIEW (view));
 
     if (nemo_global_preferences_get_ignore_view_metadata ()) {
-        nemo_window_set_ignore_meta_column_order (nemo_view_get_nemo_window (NEMO_VIEW (view)), list);
+        nemo_window_set_ignore_meta_column_order (nemo_view_get_window (NEMO_VIEW (view)), list);
     } else if (NEMO_IS_SEARCH_DIRECTORY (directory)) {
         gchar **column_array = string_array_from_string_glist (list);
         g_settings_set_strv (nemo_list_view_preferences,
@@ -1488,7 +1488,7 @@ sort_column_changed_callback (GtkTreeSortable *sortable,
 	default_sort_attr = nemo_list_model_get_attribute_from_sort_column_id (view->details->model, default_sort_column_id);
 
     if (nemo_global_preferences_get_ignore_view_metadata ())
-        nemo_window_set_ignore_meta_sort_column (nemo_view_get_nemo_window (NEMO_VIEW (view)),
+        nemo_window_set_ignore_meta_sort_column (nemo_view_get_window (NEMO_VIEW (view)),
                                                  g_quark_to_string (sort_attr));
     else
         nemo_file_set_metadata (file, NEMO_METADATA_KEY_LIST_VIEW_SORT_COLUMN,
@@ -1519,7 +1519,7 @@ sort_column_changed_callback (GtkTreeSortable *sortable,
 	}
 
     if (nemo_global_preferences_get_ignore_view_metadata ()) {
-        nemo_window_set_ignore_meta_sort_direction (nemo_view_get_nemo_window (NEMO_VIEW (view)),
+        nemo_window_set_ignore_meta_sort_direction (nemo_view_get_window (NEMO_VIEW (view)),
                                                     reversed ? SORT_DESCENDING : SORT_ASCENDING);
     } else {
         reversed_attr = (reversed ? "true" : "false");
@@ -1754,7 +1754,7 @@ column_header_menu_toggled (GtkCheckMenuItem *menu_item,
 	list = g_list_reverse (list);
 
     if (nemo_global_preferences_get_ignore_view_metadata ())
-        nemo_window_set_ignore_meta_visible_columns (nemo_view_get_nemo_window (NEMO_VIEW (list_view)), list);
+        nemo_window_set_ignore_meta_visible_columns (nemo_view_get_window (NEMO_VIEW (list_view)), list);
     else if (NEMO_IS_SEARCH_DIRECTORY (directory)) {
         gchar **column_array = string_array_from_string_glist (list);
         g_settings_set_strv (nemo_list_view_preferences,
@@ -1798,7 +1798,7 @@ column_header_menu_use_default (GtkMenuItem *menu_item,
                                      list_view);
 
     if (nemo_global_preferences_get_ignore_view_metadata ()) {
-        NemoWindow *window = nemo_view_get_nemo_window (NEMO_VIEW (list_view));
+        NemoWindow *window = nemo_view_get_window (NEMO_VIEW (list_view));
         nemo_window_set_ignore_meta_visible_columns (window, NULL);
         nemo_window_set_ignore_meta_column_order (window, NULL);
     } else {
@@ -2369,7 +2369,7 @@ get_visible_columns (NemoListView *list_view)
 	file = nemo_view_get_directory_as_file (NEMO_VIEW (list_view));
 
     if (nemo_global_preferences_get_ignore_view_metadata ()) {
-        visible_columns = nemo_window_get_ignore_meta_visible_columns (nemo_view_get_nemo_window (NEMO_VIEW (list_view)));
+        visible_columns = nemo_window_get_ignore_meta_visible_columns (nemo_view_get_window (NEMO_VIEW (list_view)));
     } else {
         visible_columns = nemo_file_get_metadata_list (file,
                                                    NEMO_METADATA_KEY_LIST_VIEW_VISIBLE_COLUMNS);
@@ -2424,7 +2424,7 @@ get_column_order (NemoListView *list_view)
 	file = nemo_view_get_directory_as_file (NEMO_VIEW (list_view));
 
     if (nemo_global_preferences_get_ignore_view_metadata ()) {
-        column_order = nemo_window_get_ignore_meta_column_order (nemo_view_get_nemo_window (NEMO_VIEW (list_view)));
+        column_order = nemo_window_get_ignore_meta_column_order (nemo_view_get_window (NEMO_VIEW (list_view)));
     } else {
         column_order = nemo_file_get_metadata_list (file,
                                                     NEMO_METADATA_KEY_LIST_VIEW_COLUMN_ORDER);
@@ -2469,7 +2469,7 @@ set_sort_order_from_metadata_and_preferences (NemoListView *list_view)
 	file = nemo_view_get_directory_as_file (NEMO_VIEW (list_view));
 
     if (nemo_global_preferences_get_ignore_view_metadata ())
-        sort_attribute = g_strdup (nemo_window_get_ignore_meta_sort_column (nemo_view_get_nemo_window (NEMO_VIEW (list_view))));
+        sort_attribute = g_strdup (nemo_window_get_ignore_meta_sort_column (nemo_view_get_window (NEMO_VIEW (list_view))));
     else
         sort_attribute = nemo_file_get_metadata (file,
                                                  NEMO_METADATA_KEY_LIST_VIEW_SORT_COLUMN,
@@ -2487,7 +2487,7 @@ set_sort_order_from_metadata_and_preferences (NemoListView *list_view)
 	}
 
     if (nemo_global_preferences_get_ignore_view_metadata ()) {
-        gint dir = nemo_window_get_ignore_meta_sort_direction (nemo_view_get_nemo_window (NEMO_VIEW (list_view)));
+        gint dir = nemo_window_get_ignore_meta_sort_direction (nemo_view_get_window (NEMO_VIEW (list_view)));
         sort_reversed = dir > SORT_NULL ? dir == SORT_DESCENDING : default_sort_reversed;
     } else {
         sort_reversed = nemo_file_get_boolean_metadata (file,
@@ -2533,7 +2533,7 @@ set_zoom_level_from_metadata_and_preferences (NemoListView *list_view)
 	if (nemo_view_supports_zooming (NEMO_VIEW (list_view))) {
 		file = nemo_view_get_directory_as_file (NEMO_VIEW (list_view));
         if (nemo_global_preferences_get_ignore_view_metadata ()) {
-            gint ignore_level = nemo_window_get_ignore_meta_zoom_level (nemo_view_get_nemo_window (NEMO_VIEW (list_view)));
+            gint ignore_level = nemo_window_get_ignore_meta_zoom_level (nemo_view_get_window (NEMO_VIEW (list_view)));
             level = ignore_level > -1 ? ignore_level : get_default_zoom_level ();
         } else {
             level = nemo_file_get_integer_metadata (file,
@@ -3136,7 +3136,7 @@ nemo_list_view_reset_to_defaults (NemoView *view)
                                      NEMO_LIST_VIEW (view));
 
     if (nemo_global_preferences_get_ignore_view_metadata ()) {
-        NemoWindow *window = nemo_view_get_nemo_window (NEMO_VIEW (view));
+        NemoWindow *window = nemo_view_get_window (NEMO_VIEW (view));
         nemo_window_set_ignore_meta_sort_column (window, NULL);
         nemo_window_set_ignore_meta_sort_direction (window, SORT_NULL);
         nemo_window_set_ignore_meta_zoom_level (window, NEMO_ZOOM_LEVEL_NULL);
@@ -3189,7 +3189,7 @@ nemo_list_view_set_zoom_level (NemoListView *view,
 	g_signal_emit_by_name (NEMO_VIEW(view), "zoom_level_changed");
 
     if (nemo_global_preferences_get_ignore_view_metadata ())
-        nemo_window_set_ignore_meta_zoom_level (nemo_view_get_nemo_window (NEMO_VIEW (view)), new_level);
+        nemo_window_set_ignore_meta_zoom_level (nemo_view_get_window (NEMO_VIEW (view)), new_level);
     else
         nemo_file_set_integer_metadata
             (nemo_view_get_directory_as_file (NEMO_VIEW (view)), 
