@@ -84,20 +84,16 @@
 #include <gtk/gtk.h>
 #include <X11/Xatom.h>
 
+#ifdef HAVE_UNITY
+#include "src/unity-bookmarks-handler.h"
+#endif
+
 #define GNOME_DESKTOP_USE_UNSTABLE_API
 
 #ifdef GNOME_BUILD
 #include <libgnome-desktop/gnome-desktop-thumbnail.h>
 #else
 #include <libcinnamon-desktop/gnome-desktop-thumbnail.h>
-#endif
-
-#ifdef HAVE_UNITY
-#include "src/unity-bookmarks-handler.h"
-#endif
-
-#ifdef HAVE_UNITY
-#include "src/unity-bookmarks-handler.h"
 #endif
 
 /* Keep window from shrinking down ridiculously small; numbers are somewhat arbitrary */
@@ -107,7 +103,6 @@
 #define START_STATE_CONFIG "start-state"
 
 #define NEMO_ACCEL_MAP_SAVE_DELAY 30
-
 
 /* The saving of the accelerator map was requested  */
 static gboolean save_of_accel_map_requested = FALSE;

@@ -8231,135 +8231,6 @@ action_location_detect_media_callback (GtkAction *action,
 }
 
 static void
-connect_to_server_response_callback (GtkDialog *dialog,
-				     int response_id,
-				     gpointer data)
-{
-#ifdef GIO_CONVERSION_DONE
-	GtkEntry *entry;
-	char *uri;
-	const char *name;
-	char *icon;
-
-	entry = GTK_ENTRY (data);
-	
-	switch (response_id) {
-	case GTK_RESPONSE_OK:
-		uri = g_object_get_data (G_OBJECT (dialog), "link-uri");
-		icon = g_object_get_data (G_OBJECT (dialog), "link-icon");
-		name = gtk_entry_get_text (entry);
-		gnome_vfs_connect_to_server (uri, (char *)name, icon);
-		gtk_widget_destroy (GTK_WIDGET (dialog));
-		break;
-	case GTK_RESPONSE_NONE:
-	case GTK_RESPONSE_DELETE_EVENT:
-	case GTK_RESPONSE_CANCEL:
-		gtk_widget_destroy (GTK_WIDGET (dialog));
-		break;
-	default :
-		g_assert_not_reached ();
-	}
-#endif
-	/* FIXME: the above code should make a server connection permanent */
-	gtk_widget_destroy (GTK_WIDGET (dialog));
-}
-
-static void
-entry_activate_callback (GtkEntry *entry,
-			 gpointer user_data)
-{
-	GtkDialog *dialog;
-	
-	dialog = GTK_DIALOG (user_data);
-	gtk_dialog_response (GTK_DIALOG (dialog), GTK_RESPONSE_OK);
-}
-
-static void
-action_connect_to_server_link_callback (GtkAction *action,
-					gpointer data)
-{
-	NemoFile *file;
-	GList *selection;
-	NemoView *view;
-	char *uri;
-	NemoIconInfo *icon;
-	const char *icon_name;
-	char *name;
-	GtkWidget *dialog;
-	GtkWidget *label;
-	GtkWidget *entry;
-	GtkWidget *box;
-	char *title;
-
-        view = NEMO_VIEW (data);
-	
-	selection = nemo_view_get_selection (view);
-
-	if (g_list_length (selection) != 1) {
-		nemo_file_list_free (selection);
-		return;
-	}
-
-	file = NEMO_FILE (selection->data);
-
-	uri = nemo_file_get_activation_uri (file);
-	icon = nemo_file_get_icon (file, NEMO_ICON_SIZE_STANDARD, gtk_widget_get_scale_factor (GTK_WIDGET (view)), 0);
-	icon_name = nemo_icon_info_get_used_name (icon);
-	name = nemo_file_get_display_name (file);
-
-	if (uri != NULL) {
-		title = g_strdup_printf (_("Connect to Server %s"), name);
-		dialog = gtk_dialog_new_with_buttons (title,
-						      nemo_view_get_containing_window (view),
-						      0,
-						      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-						      _("_Connect"), GTK_RESPONSE_OK,
-						      NULL);
-
-		g_object_set_data_full (G_OBJECT (dialog), "link-uri", g_strdup (uri), g_free);
-		g_object_set_data_full (G_OBJECT (dialog), "link-icon", g_strdup (icon_name), g_free);
-		
-		gtk_container_set_border_width (GTK_CONTAINER (dialog), 5);
-		gtk_box_set_spacing (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))), 2);
-
-		box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 12);
-		gtk_widget_show (box);
-		gtk_box_pack_start (GTK_BOX (gtk_dialog_get_content_area (GTK_DIALOG (dialog))),
-				    box, TRUE, TRUE, 0);
-		
-		label = gtk_label_new_with_mnemonic (_("Link _name:"));
-		gtk_widget_show (label);
-
-		gtk_box_pack_start (GTK_BOX (box), label, TRUE, TRUE, 12);
-		
-		entry = gtk_entry_new ();
-		if (name) {
-			gtk_entry_set_text (GTK_ENTRY (entry), name);
-		}
-		g_signal_connect (entry,
-				  "activate", 
-				  G_CALLBACK (entry_activate_callback),
-				  dialog);
-		
-		gtk_widget_show (entry);
-		gtk_label_set_mnemonic_widget (GTK_LABEL (label), entry);
-		
-		gtk_box_pack_start (GTK_BOX (box), entry, TRUE, TRUE, 12);
-		
-		gtk_dialog_set_default_response (GTK_DIALOG (dialog),
-						 GTK_RESPONSE_OK);
-		g_signal_connect (dialog, "response",
-				  G_CALLBACK (connect_to_server_response_callback),
-				  entry);
-		gtk_widget_show (dialog);
-	}
-	
-	g_free (uri);
-	g_object_unref (icon);
-	g_free (name);
-}
-
-static void
 action_location_open_alternate_callback (GtkAction *action,
 					 gpointer   callback_data)
 {
@@ -8682,10 +8553,6 @@ static const GtkActionEntry directory_view_entries[] = {
   /* label, accelerator */       N_("Reset View to _Defaults"), NULL,
   /* tooltip */                  N_("Reset sorting order and zoom level to match preferences for this view"),
 				 G_CALLBACK (action_reset_to_defaults_callback) },
-  /* name, stock id */         { NEMO_ACTION_CONNECT_TO_SERVER_LINK, NULL,
-  /* label, accelerator */       N_("Connect To This Server"), NULL,
-  /* tooltip */                  N_("Make a permanent connection to this server"),
-				 G_CALLBACK (action_connect_to_server_link_callback) },
   /* name, stock id */         { NEMO_ACTION_MOUNT_VOLUME, NULL,
   /* label, accelerator */       N_("_Mount"), NULL,
   /* tooltip */                  N_("Mount the selected volume"),
@@ -9441,10 +9308,6 @@ real_update_menus_volumes (NemoView *view,
 		show_poll &= show_poll_one;
 	}
 
-	action = gtk_action_group_get_action (view->details->dir_action_group,
-					      NEMO_ACTION_CONNECT_TO_SERVER_LINK);
-	gtk_action_set_visible (action, show_connect);
-	
 	action = gtk_action_group_get_action (view->details->dir_action_group,
 					      NEMO_ACTION_MOUNT_VOLUME);
 	gtk_action_set_visible (action, show_mount);
