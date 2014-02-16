@@ -107,9 +107,6 @@
 /* The saving of the accelerator map was requested  */
 static gboolean save_of_accel_map_requested = FALSE;
 
-static void     mount_removed_callback            (GVolumeMonitor            *monitor,
-						   GMount                    *mount,
-						   NemoApplication       *application);
 static void     mount_added_callback              (GVolumeMonitor            *monitor,
 						   GMount                    *mount,
 						   NemoApplication       *application);
