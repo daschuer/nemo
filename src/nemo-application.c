@@ -35,6 +35,7 @@
 #endif /* ENABLE_EMPTY_VIEW */
 
 #include "nemo-bookmarks-window.h"
+#include "nemo-connect-server-dialog.h"
 #include "nemo-desktop-canvas-view.h"
 #include "nemo-desktop-window.h"
 #include "nemo-desktop-manager.h"
@@ -132,6 +133,8 @@ struct _NemoApplicationPriv {
 #endif
 
 	NemoBookmarkList *bookmark_list;
+
+	GtkWidget *connect_server_window;
 };
 
 NemoBookmarkList *
@@ -389,88 +392,6 @@ mount_added_callback (GVolumeMonitor *monitor,
 	}
 }
 
-/* Called whenever a mount is unmounted. Check and see if there are
- * any windows open displaying contents on the mount. If there are,
- * close them.  It would also be cool to save open window and position
- * info.
- */
-static void
-mount_removed_callback (GVolumeMonitor *monitor,
-			GMount *mount,
-			NemoApplication *application)
-{
-	GList *window_list, *node, *close_list;
-	NemoWindow *window;
-	NemoWindowSlot *slot;
-	NemoWindowSlot *force_no_close_slot;
-	GFile *root, *computer;
-	gchar *uri;
-	guint n_slots;
-
-	close_list = NULL;
-	force_no_close_slot = NULL;
-	n_slots = 0;
-
-	/* Check and see if any of the open windows are displaying contents from the unmounted mount */
-	window_list = gtk_application_get_windows (GTK_APPLICATION (application));
-
-	root = g_mount_get_root (mount);
-	uri = g_file_get_uri (root);
-
-	DEBUG ("Removed mount at uri %s", uri);
-	g_free (uri);
-
-	/* Construct a list of windows to be closed. Do not add the non-closable windows to the list. */
-	for (node = window_list; node != NULL; node = node->next) {
-        /* Skip blank desktop windows */
-        if (!NEMO_IS_WINDOW (node->data))
-            continue;
-
-		window = NEMO_WINDOW (node->data);
-		if (window != NULL && !NEMO_IS_DESKTOP_WINDOW (window)) {
-			GList *l;
-			GList *lp;
-
-			for (lp = window->details->panes; lp != NULL; lp = lp->next) {
-				NemoWindowPane *pane;
-				pane = (NemoWindowPane*) lp->data;
-				for (l = pane->slots; l != NULL; l = l->next) {
-					slot = l->data;
-					n_slots++;
-					if (nemo_window_slot_should_close_with_mount (slot, mount)) {
-						close_list = g_list_prepend (close_list, slot);
-					}
-				} /* for all slots */
-			} /* for all panes */
-		}
-	}
-
-	if ((!nemo_desktop_manager_has_desktop_windows (application->priv->desktop_manager)) &&
-	    (close_list != NULL) &&
-	    (g_list_length (close_list) == n_slots)) {
-		/* We are trying to close all open slots. Keep one navigation slot open. */
-		force_no_close_slot = close_list->data;
-	}
-
-	/* Handle the windows in the close list. */
-	for (node = close_list; node != NULL; node = node->next) {
-		slot = node->data;
-
-		if (slot != force_no_close_slot) {
-            if (g_settings_get_boolean (nemo_preferences, NEMO_PREFERENCES_CLOSE_DEVICE_VIEW_ON_EJECT))
-                nemo_window_pane_close_slot (slot->pane, slot);
-            else
-                nemo_window_slot_go_home (slot, FALSE);
-		} else {
-			computer = g_file_new_for_path (g_get_home_dir ());
-			nemo_window_slot_open_location (slot, computer, 0);
-			g_object_unref(computer);
-		}
-	}
-
-	g_list_free (close_list);
-}
-
 static void
 open_window (NemoApplication *application,
 	     GFile *location, GdkScreen *screen, const char *geometry)
@@ -564,6 +485,126 @@ nemo_application_open (GApplication *app,
 	DEBUG ("Open called on the GApplication instance; %d files", n_files);
 
 	open_windows (self, files, n_files, gdk_screen_get_default (), geometry);
+}
+
+static GtkWindow *
+get_focus_window (GtkApplication *application)
+{
+    GList *windows;
+    GtkWindow *window = NULL;
+
+    /* the windows are ordered with the last focused first */
+    windows = gtk_application_get_windows (application);
+
+    if (windows != NULL) {
+        window = g_list_nth_data (windows, 0);
+    }
+
+    return window;
+}
+
+static gboolean
+go_to_server_cb (NemoWindow *window,
+         GError         *error,
+         gpointer        user_data)
+{
+    GFile *location = user_data;
+
+	if (error == NULL) {
+		GBookmarkFile *bookmarks;
+		GError *error2 = NULL;
+		char *datadir;
+		char *filename;
+		char *uri;
+		char *title;
+		NemoFile *file;
+		gboolean safe_to_save = TRUE;
+
+		file = nemo_file_get_existing (location);
+
+		bookmarks = g_bookmark_file_new ();
+		datadir = nemo_get_user_directory ();
+		filename = g_build_filename (datadir, "servers", NULL);
+		g_mkdir_with_parents (datadir, 0700);
+		g_free (datadir);
+		g_bookmark_file_load_from_file (bookmarks,
+						filename,
+						&error2);
+		if (error2 != NULL) {
+			if (! g_error_matches (error2, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
+				/* only warn if the file exists */
+				g_warning ("Unable to open server bookmarks: %s", error2->message);
+				safe_to_save = FALSE;
+			}
+			g_error_free (error2);
+		}
+
+        if (safe_to_save) {
+            uri = nemo_file_get_uri (file);
+            title = nemo_file_get_display_name (file);
+            g_bookmark_file_set_title (bookmarks, uri, title);
+            g_bookmark_file_set_visited (bookmarks, uri, -1);
+            g_bookmark_file_set_is_private (bookmarks, uri, FALSE); /* This is required to fix a segfault in g_bookmark_file_add_application */
+            g_bookmark_file_add_application (bookmarks, uri, NULL, NULL);
+            g_free (uri);
+            g_free (title);
+
+            g_bookmark_file_to_file (bookmarks, filename, NULL);
+        }
+
+        g_free (filename);
+        g_bookmark_file_free (bookmarks);
+    } else {
+        g_warning ("Unable to connect to server: %s\n", error->message);
+    }
+
+    g_object_unref (location);
+
+    return TRUE;
+}
+
+static void
+on_connect_server_response (GtkDialog      *dialog,
+                int             response,
+                GtkApplication *application)
+{
+    if (response == GTK_RESPONSE_OK) {
+        GFile *location;
+
+        location = nemo_connect_server_dialog_get_location (NEMO_CONNECT_SERVER_DIALOG (dialog));
+        if (location != NULL) {
+            nemo_window_go_to_full (NEMO_WINDOW (get_focus_window (application)),
+                            location,
+                            go_to_server_cb,
+                            location);
+        }
+    }
+
+    gtk_widget_destroy (GTK_WIDGET (dialog));
+}
+
+GtkWidget *
+nemo_application_connect_server (NemoApplication *application,
+				     NemoWindow      *window)
+{
+	GtkWidget *dialog;
+
+	dialog = application->priv->connect_server_window;
+
+	if (dialog == NULL) {
+		dialog = nemo_connect_server_dialog_new (window);
+		g_signal_connect (dialog, "response", G_CALLBACK (on_connect_server_response), application);
+		application->priv->connect_server_window = GTK_WIDGET (dialog);
+
+		g_object_add_weak_pointer (G_OBJECT (dialog),
+					   (gpointer *) &application->priv->connect_server_window);
+	}
+
+	gtk_window_set_transient_for (GTK_WINDOW (dialog), GTK_WINDOW (window));
+	gtk_window_set_screen (GTK_WINDOW (dialog), gtk_window_get_screen (GTK_WINDOW (window)));
+	gtk_window_present (GTK_WINDOW (dialog));
+
+	return dialog;
 }
 
 static void
@@ -1333,8 +1374,6 @@ nemo_application_startup (GApplication *app)
 	/* Watch for unmounts so we can close open windows */
 	/* TODO-gio: This should be using the UNMOUNTED feature of GFileMonitor instead */
 	self->priv->volume_monitor = g_volume_monitor_get ();
-	g_signal_connect_object (self->priv->volume_monitor, "mount_removed",
-				 G_CALLBACK (mount_removed_callback), self, 0);
 	g_signal_connect_object (self->priv->volume_monitor, "mount_added",
 				 G_CALLBACK (mount_added_callback), self, 0);
 
