@@ -3377,6 +3377,7 @@ done_loading (NemoView *view,
 		nemo_view_display_selection_info (view);
 	}
 
+	view->details->loading = FALSE;
 	g_signal_emit (view, signals[END_LOADING], 0, all_files_seen);
 
     if (g_getenv("NEMO_TIME_STARTUP")) {
@@ -3389,7 +3390,6 @@ done_loading (NemoView *view,
         g_printerr ("Nemo startup time: %ld.%ld seconds\n", seconds, milli_remainder);
     }
 
-	view->details->loading = FALSE;
 	nemo_profile_end (NULL);
 }
 
