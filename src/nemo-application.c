@@ -86,7 +86,11 @@
 
 #define GNOME_DESKTOP_USE_UNSTABLE_API
 
+#ifdef GNOME_BUILD
+#include <libgnome-desktop/gnome-desktop-thumbnail.h>
+#else
 #include <libcinnamon-desktop/gnome-desktop-thumbnail.h>
+#endif
 
 /* Keep window from shrinking down ridiculously small; numbers are somewhat arbitrary */
 #define APPLICATION_WINDOW_MIN_WIDTH	300
@@ -751,6 +755,7 @@ nemo_application_local_command_line (GApplication *application,
 		goto out;
 	}
 
+#ifndef GNOME_BUILD
     if (fix_cache) {
         if (geteuid () != 0) {
             g_printerr ("The --fix-cache option must be run with sudo or as the root user.\n");
@@ -761,6 +766,7 @@ nemo_application_local_command_line (GApplication *application,
 
         goto out;
     }
+#endif
 
 	DEBUG ("Parsing local command line, no_default_window %d, quit %d, "
 	       "self checks %d, no_desktop %d",
@@ -1234,6 +1240,7 @@ nemo_application_startup (GApplication *app)
     self->priv->cache_problem = FALSE;
     self->priv->ignore_cache_problem = FALSE;
 
+#ifndef GNOME_BUILD
     /* silently do a full check of the cache and fix if running as root.
      * If running as a normal user, do a quick check, and we'll notify the
      * user later if there's a problem via an infobar */
@@ -1244,6 +1251,7 @@ nemo_application_startup (GApplication *app)
         if (!gnome_desktop_thumbnail_cache_check_permissions (NULL, TRUE))
             self->priv->cache_problem = TRUE;
     }
+#endif
 
     self->priv->desktop_manager = NULL;
 

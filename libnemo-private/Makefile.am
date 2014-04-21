@@ -8,7 +8,8 @@ AM_CPPFLAGS = 						\
 	-I$(top_srcdir)/cut-n-paste-code		\
 	$(BASE_CFLAGS)					\
 	$(COMMON_CFLAGS)				\
-	$(NEMO_CFLAGS)				\
+	$(NEMO_CFLAGS)					\
+	$(DESKTOP_CFLAGS)				\
 	$(WARN_CFLAGS)				\
 	$(DISABLE_DEPRECATED_CFLAGS)			\
 	$(TRACKER_CFLAGS)				\
@@ -55,7 +56,8 @@ libnemo_private_la_LIBADD =		\
 	$(top_builddir)/libnemo-extension/libnemo-extension.la \
 	$(BASE_LIBS)			\
 	$(COMMON_LIBS)			\
-	$(NEMO_LIBS)		\
+	$(NEMO_LIBS)			\
+	$(DESKTOP_LIBS)			\
 	-lm				\
 	$(NULL)
 

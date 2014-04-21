@@ -31,8 +31,12 @@
 #include <libnemo-private/nemo-file-utilities.h>
 #include <libnemo-private/nemo-file.h>
 #include <libnemo-private/nemo-icon-names.h>
-#define GNOME_DESKTOP_USE_UNSTABLE_API
-#include <libcinnamon-desktop/gnome-desktop-utils.h>
+
+#ifndef GNOME_BUILD
+	#define GNOME_DESKTOP_USE_UNSTABLE_API
+    #include <libcinnamon-desktop/gnome-desktop-utils.h>
+#endif
+
 
 #include <gio/gio.h>
 #include <string.h>
@@ -64,7 +68,8 @@ G_DEFINE_TYPE(NemoBookmarkList, nemo_bookmark_list, G_TYPE_OBJECT);
 static void
 ensure_proper_file_permissions (GFile *file)
 {
-    if (geteuid () == 0) {
+#ifndef GNOME_BUILD
+	if (geteuid () == 0) {
         struct passwd *pwent;
         pwent = gnome_desktop_get_session_user_pwent ();
 
@@ -78,6 +83,7 @@ ensure_proper_file_permissions (GFile *file)
 
         g_free (path);
     }
+#endif
 }
 
 static NemoBookmark *
