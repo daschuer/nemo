@@ -92,6 +92,10 @@
 #include <libcinnamon-desktop/gnome-desktop-thumbnail.h>
 #endif
 
+#ifdef HAVE_UNITY
+#include "src/unity-bookmarks-handler.h"
+#endif
+
 /* Keep window from shrinking down ridiculously small; numbers are somewhat arbitrary */
 #define APPLICATION_WINDOW_MIN_WIDTH	300
 #define APPLICATION_WINDOW_MIN_HEIGHT	100
@@ -1257,6 +1261,10 @@ nemo_application_startup (GApplication *app)
 
     if (geteuid () != 0 && !desktop_already_managed ())
         init_desktop (self);
+
+#ifdef HAVE_UNITY
+	unity_bookmarks_handler_initialize ();
+#endif
 }
 
 static void
