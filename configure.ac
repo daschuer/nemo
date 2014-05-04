@@ -12,6 +12,8 @@ m4_define(exif_minver,                 0.6.20)
 m4_define(exempi_minver,               2.2.0)
 m4_define(notify_minver,               0.7.0)
 m4_define(glib_mime_ver,               2.34.0)
+m4_define(unity_minver,                4.0.0)
+m4_define(dbusmenu_minver,             0.4.90)
 
 dnl 1. If the library code has changed at all since last release, then increment revision.
 dnl 2. If any interfaces have been added, then increment current and set revision to 0.
@@ -206,8 +208,38 @@ AM_CONDITIONAL(ENABLE_EMPTY_VIEW, test "x$ENABLE_EMPTY_VIEW" = "x1")
 
 dnl ==========================================================================
 
+AM_CONDITIONAL(HAVE_UNITY, false)
+
+AC_ARG_ENABLE(unity,
+    AC_HELP_STRING([--disable-unity], [build without unity launcher support]))
+
+msg_unity=no
+if test "x$enable_unity" != "xno"; then
+    PKG_CHECK_MODULES(UNITY,
+        [unity >= unity_minver
+         dbusmenu-glib-0.4 >= dbusmenu_minver], [
+            AM_CONDITIONAL(HAVE_UNITY, true)
+            AC_DEFINE(HAVE_UNITY, 1, [Have Unity])
+            ]
+            msg_unity=yes,
+            [AM_CONDITIONAL(HAVE_UNITY, false)
+            ])
+        AC_SUBST(UNITY_CFLAGS)
+        AC_SUBST(UNITY_LIBS)
+fi
+
+
+dnl ==========================================================================
+
+extra_warn_flags="\
+	-Werror=unused-function\
+	-Werror=unused-variable\
+	-Wno-declaration-after-statement\
+	-Wno-deprecated-declarations\
+	"
+
 m4_ifdef([AX_COMPILER_FLAGS],
-	 [AX_COMPILER_FLAGS([WARN_CFLAGS],[WARN_LDFLAGS])])
+	 [AX_COMPILER_FLAGS([WARN_CFLAGS],[WARN_LDFLAGS],[$ax_is_release],[],[$extra_warn_flags])])
 
 dnl ===========================================================================
 dnl Check for Tracker
@@ -326,6 +358,7 @@ nemo-$VERSION:
 	desktop libraries:	$msg_desktop
 	libexif support:	$msg_libexif
 	libexempi support:	$msg_xmp
+	Unity support:          $msg_unity
 	Tracker support:	$build_tracker
 
 	debugging support:      ${enable_debug}
