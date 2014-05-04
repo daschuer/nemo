@@ -3041,8 +3041,15 @@ create_basic_page (NemoPropertiesWindow *window)
 	GtkWidget *icon_pixmap_widget;
 	GtkWidget *volume_usage;
 	GtkWidget *hbox, *vbox;
-	hbox = create_page_with_hbox (window->details->stack, "basic", _("Basic"),
-				      "help:gnome-help/nemo-file-properties-basic");
+
+	if (!g_strcmp0(g_getenv("XDG_CURRENT_DESKTOP"), "Unity")) {
+		hbox = create_page_with_hbox (window->details->stack, "basic", _("Basic"),
+			"help:ubuntu-help/nemo-file-properties-basic");
+	} else {
+		hbox = create_page_with_hbox (window->details->stack, "basic", _("Basic"),
+			"help:gnome-help/nemo-file-properties-basic");
+	}
+
 	
 	/* Icon pixmap */
 
@@ -4489,9 +4496,15 @@ create_permissions_page (NemoPropertiesWindow *window)
 	char *file_name, *prompt_text;
 	GList *file_list;
 
-	vbox = create_page_with_vbox (window->details->stack, "permissions",
-				      _("Permissions"),
-				      "help:gnome-help/nemo-file-properties-permissions");
+	if (!g_strcmp0(g_getenv("XDG_CURRENT_DESKTOP"), "Unity")) {
+		vbox = create_page_with_vbox (window->details->stack, "permissions",
+			_("Permissions"),
+			"help:ubuntu-help/nemo-file-properties-permissions");
+	} else {
+		vbox = create_page_with_vbox (window->details->stack, "permissions",
+		      _("Permissions"),
+		      "help:gnome-help/nemo-file-properties-permissions");
+	}
 
 	file_list = window->details->original_files;
 
@@ -4790,7 +4803,11 @@ create_open_with_page (NemoPropertiesWindow *window)
 	gtk_widget_show (vbox);
 	g_free (mime_type);
 
-	g_object_set_data_full (G_OBJECT (vbox), "help-uri", g_strdup ("help:gnome-help/files-open"), g_free);
+	if (!g_strcmp0(g_getenv("XDG_CURRENT_DESKTOP"), "Unity")) {
+		g_object_set_data_full (G_OBJECT (vbox), "help-uri", g_strdup ("help:ubuntu-help/files-open"), g_free);
+	} else {
+		g_object_set_data_full (G_OBJECT (vbox), "help-uri", g_strdup ("help:gnome-help/files-open"), g_free);
+	}	
 	gtk_container_set_border_width (GTK_CONTAINER (vbox), STACK_INNER_BORDER);
 	gtk_stack_add_titled (window->details->stack,
 				  vbox, "open_with", _("Open With"));
@@ -5176,10 +5193,17 @@ real_response (GtkDialog *dialog,
 	case GTK_RESPONSE_HELP:
 		curpage = gtk_stack_get_visible_child (window->details->stack);
 		helpuri = g_object_get_data (G_OBJECT (curpage), "help-uri");
-		gtk_show_uri (gtk_window_get_screen (GTK_WINDOW (dialog)),
-			      helpuri ? helpuri : "help:gnome-help/files",
-			      gtk_get_current_event_time (),
-			      &error);
+		if (!g_strcmp0(g_getenv("XDG_CURRENT_DESKTOP"), "Unity"))
+			gtk_show_uri (gtk_window_get_screen (GTK_WINDOW (dialog)),
+				helpuri ? helpuri : "help:ubuntu-help/files",
+				gtk_get_current_event_time (),
+				&error);
+		else
+			gtk_show_uri (gtk_window_get_screen (GTK_WINDOW (dialog)),
+				helpuri ? helpuri : "help:gnome-help/files",
+				gtk_get_current_event_time (),
+				&error);
+
 		if (error != NULL) {
 			eel_show_error_dialog (_("There was an error displaying help."), error->message,
 					       GTK_WINDOW (dialog));
