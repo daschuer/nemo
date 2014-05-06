@@ -334,9 +334,9 @@ static void
 nemo_desktop_background_changed (GnomeBG *bg,
                                      gpointer user_data)
 {
-        NemoDesktopBackground *self;
+	NemoDesktopBackground *self;
 
-        self = user_data;
+	self = user_data;
 	init_fade (self);
 	queue_background_change (self);
 }
@@ -345,9 +345,9 @@ static void
 nemo_desktop_background_transitioned (GnomeBG *bg,
                                           gpointer user_data)
 {
-        NemoDesktopBackground *self;
+	NemoDesktopBackground *self;
 
-        self = user_data;
+	self = user_data;
 	free_fade (self);
 	queue_background_change (self);
 }
@@ -558,7 +558,7 @@ nemo_desktop_background_init (NemoDesktopBackground *self)
 NemoDesktopBackground *
 nemo_desktop_background_new (GtkWidget *container)
 {
-        return g_object_new (NEMO_TYPE_DESKTOP_BACKGROUND,
+	return g_object_new (NEMO_TYPE_DESKTOP_BACKGROUND,
                              "widget", container,
                              NULL);
 }
