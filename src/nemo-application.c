@@ -490,17 +490,17 @@ nemo_application_open (GApplication *app,
 static GtkWindow *
 get_focus_window (GtkApplication *application)
 {
-    GList *windows;
-    GtkWindow *window = NULL;
+	GList *windows;
+	GtkWindow *window = NULL;
 
-    /* the windows are ordered with the last focused first */
-    windows = gtk_application_get_windows (application);
+	/* the windows are ordered with the last focused first */
+	windows = gtk_application_get_windows (application);
 
-    if (windows != NULL) {
-        window = g_list_nth_data (windows, 0);
-    }
+	if (windows != NULL) {
+		window = g_list_nth_data (windows, 0);
+	}
 
-    return window;
+	return window;
 }
 
 static gboolean
@@ -508,7 +508,8 @@ go_to_server_cb (NemoWindow *window,
          GError         *error,
          gpointer        user_data)
 {
-    GFile *location = user_data;
+    GFile *location = user_data;	
+    gboolean retval;
 
 	if (error == NULL) {
 		GBookmarkFile *bookmarks;
@@ -539,48 +540,48 @@ go_to_server_cb (NemoWindow *window,
 			g_error_free (error2);
 		}
 
-        if (safe_to_save) {
-            uri = nemo_file_get_uri (file);
-            title = nemo_file_get_display_name (file);
-            g_bookmark_file_set_title (bookmarks, uri, title);
-            g_bookmark_file_set_visited (bookmarks, uri, -1);
-            g_bookmark_file_set_is_private (bookmarks, uri, FALSE); /* This is required to fix a segfault in g_bookmark_file_add_application */
-            g_bookmark_file_add_application (bookmarks, uri, NULL, NULL);
-            g_free (uri);
-            g_free (title);
+		if (safe_to_save) {
+			uri = nemo_file_get_uri (file);
+			title = nemo_file_get_display_name (file);
+			g_bookmark_file_set_title (bookmarks, uri, title);
+			g_bookmark_file_set_visited (bookmarks, uri, -1);
+			g_bookmark_file_add_application (bookmarks, uri, NULL, NULL);
+			g_free (uri);
+			g_free (title);
 
-            g_bookmark_file_to_file (bookmarks, filename, NULL);
-        }
+			g_bookmark_file_to_file (bookmarks, filename, NULL);
+		}
 
-        g_free (filename);
-        g_bookmark_file_free (bookmarks);
-    } else {
-        g_warning ("Unable to connect to server: %s\n", error->message);
-    }
+		nemo_file_unref (file);
+		g_free (filename);
+		g_bookmark_file_free (bookmarks);
 
-    g_object_unref (location);
+		retval = TRUE;
+	} else {
+		retval = FALSE;
+	}
 
-    return TRUE;
+	return retval;
 }
 
 static void
 on_connect_server_response (GtkDialog      *dialog,
-                int             response,
-                GtkApplication *application)
+			    int             response,
+			    GtkApplication *application)
 {
-    if (response == GTK_RESPONSE_OK) {
-        GFile *location;
+	if (response == GTK_RESPONSE_OK) {
+		GFile *location;
 
-        location = nemo_connect_server_dialog_get_location (NEMO_CONNECT_SERVER_DIALOG (dialog));
-        if (location != NULL) {
-            nemo_window_go_to_full (NEMO_WINDOW (get_focus_window (application)),
-                            location,
-                            go_to_server_cb,
-                            location);
-        }
-    }
+		location = nemo_connect_server_dialog_get_location (NEMO_CONNECT_SERVER_DIALOG (dialog));
+		if (location != NULL) {
+			nemo_window_go_to_full (NEMO_WINDOW (get_focus_window (application)),
+						    location,
+						    go_to_server_cb,
+						    location);
+		}
+	}
 
-    gtk_widget_destroy (GTK_WIDGET (dialog));
+	gtk_widget_destroy (GTK_WIDGET (dialog));
 }
 
 GtkWidget *
@@ -771,7 +772,7 @@ nemo_application_local_command_line (GApplication *application,
 
 	context = g_option_context_new (_("\n\nBrowse the file system with the file manager"));
 	g_option_context_add_main_entries (context, options, NULL);
-	g_option_context_add_group (context, gtk_get_option_group (TRUE));
+	g_option_context_add_group (context, gtk_get_option_group (FALSE));
 
 	argv = *arguments;
 	argc = g_strv_length (argv);

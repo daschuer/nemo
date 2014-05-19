@@ -138,110 +138,9 @@ bookmark_set_name_from_ready_file (NemoBookmark *self,
 	g_free (display_name);
 }
 
-static GIcon *
-get_default_folder_icon (NemoBookmark *bookmark)
-{
-    GIcon *ret = NULL;
-
-    if (g_file_is_native (bookmark->details->location)) {
-        ret = g_themed_icon_new (NEMO_ICON_FOLDER);
-    } else {
-        gchar *uri = g_file_get_uri (bookmark->details->location);
-        if (g_str_has_prefix (uri, EEL_SEARCH_URI)) {
-            ret = g_themed_icon_new (NEMO_ICON_FOLDER_SAVED_SEARCH);
-        } else {
-            ret = g_themed_icon_new (NEMO_ICON_FOLDER_REMOTE);
-        }
-        g_free (uri);
-    }
-
-    return ret;
-}
-
-static GIcon *
-construct_default_icon_from_metadata (NemoBookmark *bookmark)
-{
-    NemoBookmarkMetadata *md = bookmark->details->metadata;
-    GIcon *ret = NULL;
-
-    if (md->icon_name) {
-        ret = g_themed_icon_new (md->icon_name);
-    } else if (md->icon_uri) {
-        GFile *file = g_file_new_for_uri (md->icon_uri);
-        ret = g_file_icon_new (file);
-
-        g_object_unref (file);
-    } else {
-        ret = get_default_folder_icon (bookmark);
-    }
-
-    if (ret != NULL && md->emblems != NULL) {
-        guint i = 0;
-
-        GIcon *emb_icon;
-        GEmblem *emblem;
-
-        emb_icon = g_themed_icon_new (md->emblems[i]);
-        emblem = g_emblem_new (emb_icon);
-
-        ret = g_emblemed_icon_new (ret, emblem);
-
-        i++;
-
-        while (i < g_strv_length (md->emblems)) {
-            emb_icon = g_themed_icon_new (md->emblems[i]);
-            emblem = g_emblem_new (emb_icon);
-
-            g_emblemed_icon_add_emblem (G_EMBLEMED_ICON (ret), emblem);
-
-            i++;
-        }
-    }
-
-    return ret;
-}
-
 static void
-nemo_bookmark_set_icon_to_default (NemoBookmark *bookmark)
-{
-    GIcon *icon, *emblemed_icon;
-    GIcon *folder = NULL;
-    GEmblem *emblem;
+nemo_bookmark_set_icon_to_default (NemoBookmark *bookmark);
 
-    folder = NULL;
-
-    if (bookmark->details->metadata != NULL) {
-        folder = construct_default_icon_from_metadata (bookmark);
-    }
-
-    if (!folder)
-        folder = get_default_folder_icon (bookmark);
-
-    if (!nemo_bookmark_uri_get_exists (bookmark)) {
-        DEBUG ("%s: file does not exist, add emblem", nemo_bookmark_get_name (bookmark));
-
-        icon = g_themed_icon_new (GTK_STOCK_DIALOG_WARNING);
-        emblem = g_emblem_new (icon);
-
-        if (G_IS_EMBLEMED_ICON (folder))
-            g_emblemed_icon_add_emblem (G_EMBLEMED_ICON (folder), emblem);
-        else {
-            emblemed_icon = g_emblemed_icon_new (folder, emblem);
-            folder = emblemed_icon;
-        }
-
-        g_object_unref (emblem);
-        g_object_unref (icon);
-    }
-
-    DEBUG ("%s: setting icon to default", nemo_bookmark_get_name (bookmark));
-
-    g_object_set (bookmark,
-              "icon", G_ICON (folder),
-              NULL);
-
-    g_object_unref (folder);
-}
 
 static gboolean
 metadata_changed (NemoBookmark *bookmark)
@@ -315,6 +214,75 @@ bookmark_file_changed_callback (NemoFile *file,
             g_signal_emit (bookmark, signals[CONTENTS_CHANGED], 0);
         }
 	}
+}
+
+static GIcon *
+get_native_icon (NemoBookmark *bookmark,
+		 gboolean symbolic)
+{
+	gint idx;
+	GIcon *icon = NULL;
+
+	if (bookmark->details->file == NULL) {
+		goto out;
+	}
+
+	for (idx = 0; idx < G_USER_N_DIRECTORIES; idx++) {
+		if (nemo_file_is_user_special_directory (bookmark->details->file, idx)) {
+			break;
+		}
+	}
+
+	if (idx < G_USER_N_DIRECTORIES) {
+		if (symbolic) {
+			icon = nemo_special_directory_get_symbolic_icon (idx);
+		} else {
+			icon = nemo_special_directory_get_icon (idx);
+		}
+	}
+
+ out:
+	if (icon == NULL) {
+		if (symbolic) {
+			icon = g_themed_icon_new (NEMO_ICON_SYMBOLIC_FOLDER);
+		} else {
+			icon = g_themed_icon_new (NEMO_ICON_FULLCOLOR_FOLDER);
+		}
+	}
+
+	return icon;
+}
+
+static void
+nemo_bookmark_set_icon_to_default (NemoBookmark *bookmark)
+{
+	GIcon *icon, *symbolic_icon;
+	char *uri;
+
+	if (g_file_is_native (bookmark->details->location)) {
+		symbolic_icon = get_native_icon (bookmark, TRUE);
+		icon = get_native_icon (bookmark, FALSE);
+	} else {
+		uri = nemo_bookmark_get_uri (bookmark);
+		if (g_str_has_prefix (uri, EEL_SEARCH_URI)) {
+			symbolic_icon = g_themed_icon_new (NEMO_ICON_SYMBOLIC_FOLDER_SAVED_SEARCH);
+			icon = g_themed_icon_new (NEMO_ICON_FULLCOLOR_FOLDER_SAVED_SEARCH);
+		} else {
+			symbolic_icon = g_themed_icon_new (NEMO_ICON_SYMBOLIC_FOLDER_REMOTE);
+			icon = g_themed_icon_new (NEMO_ICON_FULLCOLOR_FOLDER_REMOTE);
+		}
+		g_free (uri);
+	}
+
+	DEBUG ("%s: setting icon to default", nemo_bookmark_get_name (bookmark));
+
+	g_object_set (bookmark,
+		      "icon", icon,
+		      "symbolic-icon", symbolic_icon,
+		      NULL);
+
+	g_object_unref (icon);
+	g_object_unref (symbolic_icon);
 }
 
 static void
