@@ -1082,11 +1082,22 @@ gboolean
 nemo_bookmark_list_can_bookmark_location (NemoBookmarkList *list,
 					      GFile                *location)
 {
+	NemoBookmark *bookmark;
+	gboolean is_builtin;
+
 	if (nemo_bookmark_list_item_with_location (list, location, NULL)) {
 		return FALSE;
 	}
 
-	return !nemo_is_home_directory (location);
+	if (nemo_is_home_directory (location)) {
+		return FALSE;
+	}
+
+	bookmark = nemo_bookmark_new (location, NULL, NULL);
+	is_builtin = nemo_bookmark_get_is_builtin (bookmark);
+	g_object_unref (bookmark);
+
+	return !is_builtin;
 }
 
 /**
