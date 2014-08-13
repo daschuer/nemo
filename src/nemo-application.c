@@ -47,7 +47,6 @@
 #include "nemo-progress-ui-handler.h"
 #include "nemo-self-check-functions.h"
 #include "nemo-window.h"
-#include "nemo-window-manage-views.h"
 #include "nemo-window-private.h"
 #include "nemo-window-slot.h"
 #include "nemo-statusbar.h"

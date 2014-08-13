@@ -148,7 +148,6 @@ GList *              nemo_window_get_panes             (NemoWindow *window);
 void                 nemo_window_push_status           (NemoWindow *window,
                                                             const char *text);
 GtkWidget *          nemo_window_ensure_location_entry   (NemoWindow *window);
-void                 nemo_window_sync_search_widgets   (NemoWindow *window);
 void                 nemo_window_grab_focus            (NemoWindow *window);
 
 void     nemo_window_hide_sidebar         (NemoWindow *window);
