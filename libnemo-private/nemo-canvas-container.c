@@ -36,7 +36,6 @@
 #include "nemo-selection-canvas-item.h"
 #include "nemo-desktop-utils.h"
 #include "nemo-warnings.h"
-#include <atk/atkaction.h>
 #include <eel/eel-accessibility.h>
 #include <eel/eel-vfs-extensions.h>
 #include <eel/eel-gtk-extensions.h>
