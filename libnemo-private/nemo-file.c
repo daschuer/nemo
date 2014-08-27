@@ -4084,6 +4084,18 @@ get_custom_icon_metadata_name (NemoFile *file)
 }
 
 static GIcon *
+get_link_icon (NemoFile *file)
+{
+	GIcon *icon = NULL;
+
+	if (file->details->got_link_info && file->details->custom_icon != NULL) {
+		icon = g_object_ref (file->details->custom_icon);
+	}
+
+	return icon;
+}
+
+static GIcon *
 get_custom_icon (NemoFile *file)
 {
 	char *custom_icon_uri, *custom_icon_name;
@@ -4116,11 +4128,7 @@ get_custom_icon (NemoFile *file)
 			g_free (custom_icon_name);
 		}
 	}
- 
-	if (icon == NULL && file->details->got_link_info && file->details->custom_icon != NULL) {
-		icon = g_object_ref (file->details->custom_icon);
- 	}
- 
+
 	return icon;
 }
 
@@ -4208,6 +4216,12 @@ nemo_file_get_gicon (NemoFile *file,
 	}
 
 	icon = get_custom_icon (file);
+
+	if (icon != NULL) {
+		return icon;
+	}
+
+	icon = get_link_icon (file);
 
 	if (icon != NULL) {
 		return icon;
@@ -4365,7 +4379,7 @@ nemo_file_get_thumbnail_path (NemoFile *file)
 NemoIconInfo *
 nemo_file_get_icon (NemoFile *file,
 			int size,
-            int scale,
+			int scale,
 			NemoFileIconFlags flags)
 {
 	NemoIconInfo *icon;
@@ -4376,22 +4390,15 @@ nemo_file_get_icon (NemoFile *file,
 	if (file == NULL) {
 		return NULL;
 	}
-	
-	gicon = get_custom_icon (file);
-	if (gicon) {
-		GdkPixbuf *pixbuf;
 
+	gicon = get_custom_icon (file);
+	if (gicon == NULL) {
+		gicon = get_link_icon (file);
+	}
+
+	if (gicon != NULL) {
 		icon = nemo_icon_info_lookup (gicon, size, scale);
 		g_object_unref (gicon);
-
-		pixbuf = nemo_icon_info_get_pixbuf (icon);
-		if (pixbuf != NULL) {
-			nemo_ui_frame_image (&pixbuf);
-			g_object_unref (icon);
-
-			icon = nemo_icon_info_new_for_pixbuf (pixbuf, scale);
-			g_object_unref (pixbuf);
-		}
 
 		return icon;
 	}
