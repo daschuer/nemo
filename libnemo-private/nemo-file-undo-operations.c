@@ -1112,11 +1112,9 @@ trash_retrieve_files_to_restore_thread (GSimpleAsyncResult *res,
 		GFileInfo *info;
 		gpointer lookupvalue;
 		GFile *item;
-		GTimeVal timeval;
 		glong trash_time, orig_trash_time;
 		const char *origpath;
 		GFile *origfile;
-		const char *time_string;
 
 		while ((info = g_file_enumerator_next_file (enumerator, NULL, &error)) != NULL) {
 			/* Retrieve the original file uri */
@@ -1127,13 +1125,21 @@ trash_retrieve_files_to_restore_thread (GSimpleAsyncResult *res,
 
 			if (lookupvalue) {
 				orig_trash_time = GPOINTER_TO_SIZE (lookupvalue);
-				time_string = g_file_info_get_attribute_string (info, G_FILE_ATTRIBUTE_TRASH_DELETION_DATE);
+				trash_time = 0;
+#if GLIB_CHECK_VERSION (2, 36, 0)
+				GDateTime *date = g_file_info_get_deletion_date (info);
+				if (date) {
+					trash_time = g_date_time_to_unix (date);
+					g_date_time_unref (date);
+				}
+#else
+				const char *time_string = g_file_info_get_attribute_string (info, G_FILE_ATTRIBUTE_TRASH_DELETION_DATE);
 				if (time_string != NULL) {
+					GTimeVal timeval;
 					g_time_val_from_iso8601 (time_string, &timeval);
 					trash_time = timeval.tv_sec;
-				} else {
-					trash_time = 0;
 				}
+#endif 
 
 				if (abs (orig_trash_time - trash_time) <= TRASH_TIME_EPSILON) {
 					/* File in the trash */
