@@ -46,6 +46,7 @@
 #include "nemo-previewer.h"
 #include "nemo-progress-ui-handler.h"
 #include "nemo-self-check-functions.h"
+#include "nemo-shell-search-provider.h"
 #include "nemo-window.h"
 #include "nemo-window-private.h"
 #include "nemo-window-slot.h"
@@ -107,14 +108,9 @@
 /* The saving of the accelerator map was requested  */
 static gboolean save_of_accel_map_requested = FALSE;
 
-static void     mount_added_callback              (GVolumeMonitor            *monitor,
-						   GMount                    *mount,
-						   NemoApplication       *application);
-
 G_DEFINE_TYPE (NemoApplication, nemo_application, GTK_TYPE_APPLICATION);
 
 struct _NemoApplicationPriv {
-	GVolumeMonitor *volume_monitor;
 	NemoProgressUIHandler *progress_handler;
 	NemoDBusManager *dbus_manager;
 	NemoFreedesktopDBus *fdb_manager;
@@ -134,6 +130,8 @@ struct _NemoApplicationPriv {
 	NemoBookmarkList *bookmark_list;
 
 	GtkWidget *connect_server_window;
+
+	NemoShellSearchProvider *search_provider;
 };
 
 NemoBookmarkList *
@@ -366,29 +364,6 @@ nemo_application_create_window (NemoApplication *application,
 	nemo_profile_end (NULL);
 
 	return window;
-}
-
-static void
-mount_added_callback (GVolumeMonitor *monitor,
-		      GMount *mount,
-		      NemoApplication *application)
-{
-	NemoDirectory *directory;
-	GFile *root;
-	gchar *uri;
-		
-	root = g_mount_get_root (mount);
-	uri = g_file_get_uri (root);
-
-	DEBUG ("Added mount at uri %s", uri);
-	g_free (uri);
-	
-	directory = nemo_directory_get_existing (root);
-	g_object_unref (root);
-	if (directory != NULL) {
-		nemo_directory_force_reload (directory);
-		nemo_directory_unref (directory);
-	}
 }
 
 static void
@@ -641,7 +616,6 @@ nemo_application_finalize (GObject *object)
 
 	application = NEMO_APPLICATION (object);
 
-	g_clear_object (&application->priv->volume_monitor);
 	g_clear_object (&application->priv->progress_handler);
 	g_clear_object (&application->priv->bookmark_list);
 
@@ -649,6 +623,7 @@ nemo_application_finalize (GObject *object)
 
 	g_clear_object (&application->priv->dbus_manager);
 	g_clear_object (&application->priv->fdb_manager);
+	g_clear_object (&application->priv->search_provider);
 
 	notify_uninit ();
 
@@ -1384,16 +1359,13 @@ nemo_application_startup (GApplication *app)
 	notify_init (GETTEXT_PACKAGE);
 	self->priv->progress_handler = nemo_progress_ui_handler_new ();
 
-	/* Watch for unmounts so we can close open windows */
-	/* TODO-gio: This should be using the UNMOUNTED feature of GFileMonitor instead */
-	self->priv->volume_monitor = g_volume_monitor_get ();
-	g_signal_connect_object (self->priv->volume_monitor, "mount_added",
-				 G_CALLBACK (mount_added_callback), self, 0);
-
-    g_signal_connect_swapped (nemo_window_state, "changed::" NEMO_WINDOW_STATE_START_WITH_MENU_BAR,
+        g_signal_connect_swapped (nemo_window_state, "changed::" NEMO_WINDOW_STATE_START_WITH_MENU_BAR,
                               G_CALLBACK (menu_state_changed_callback), self);
 
+
+	/* Bookmarks and search */
 	self->priv->bookmark_list = nemo_bookmark_list_new ();
+	self->priv->search_provider = nemo_shell_search_provider_new ();
 
 	/* Check the user's .nemo directories and post warnings
 	 * if there are problems.

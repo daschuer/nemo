@@ -95,13 +95,13 @@ main (int argc, char *argv[])
 	xmp_init();
 #endif
 
-	/* Run the nemo application. */
+	/* Run the nautilus application. */
 	application = nemo_application_new ();
 
-    /* hold indefinitely if we're asked to persist */
-    if (g_getenv ("NEMO_PERSIST") != NULL) {
-        g_application_hold (G_APPLICATION (application));
-    }
+	/* hold indefinitely if we're asked to persist */
+	if (g_getenv ("NEMO_PERSIST") != NULL) {
+		g_application_hold (G_APPLICATION (application));
+	}
 
 	retval = g_application_run (G_APPLICATION (application),
 				    argc, argv);
