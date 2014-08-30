@@ -345,8 +345,6 @@ CFLAGS="$CFLAGS -O3"
 
 AC_CONFIG_FILES([
 Makefile
-cut-n-paste-code/Makefile
-cut-n-paste-code/libegg/Makefile
 data/Makefile
 data/nemo.desktop.in
 data/nemo-autorun-software.desktop.in

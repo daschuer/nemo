@@ -284,7 +284,7 @@ menu_provider_items_updated_handler (NemoMenuProvider *provider, GtkWidget* pare
 {
 
 	g_signal_emit_by_name (nemo_signaller_get_current (),
-			       "popup_menu_changed");
+			       "popup-menu-changed");
 }
 
 static void
@@ -298,7 +298,7 @@ menu_provider_init_callback (void)
         for (l = providers; l != NULL; l = l->next) {
                 NemoMenuProvider *provider = NEMO_MENU_PROVIDER (l->data);
 
-		g_signal_connect_after (G_OBJECT (provider), "items_updated",
+		g_signal_connect_after (G_OBJECT (provider), "items-updated",
                            (GCallback)menu_provider_items_updated_handler,
                            NULL);
         }
