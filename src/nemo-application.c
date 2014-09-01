@@ -666,6 +666,12 @@ do_cmdline_sanity_checks (NemoApplication *self,
 		goto out;
 	}
 
+	if (self->priv->no_desktop && self->priv->force_desktop) {
+		g_printerr ("%s\n",
+			    _("--no-desktop and --force-desktop cannot be used together."));
+		goto out;
+	}
+
 	retval = TRUE;
 
  out:
@@ -815,7 +821,6 @@ nemo_application_local_command_line (GApplication *application,
 	GError *error = NULL;
 	gint argc = 0;
 	gchar **argv = NULL;
-
 	*exit_status = EXIT_SUCCESS;
 
 	nemo_profile_start (NULL);
@@ -867,8 +872,9 @@ nemo_application_local_command_line (GApplication *application,
 #endif
 
 	DEBUG ("Parsing local command line, no_default_window %d, quit %d, "
-	       "self checks %d, no_desktop %d",
-	       no_default_window, kill_shell, perform_self_check, self->priv->no_desktop);
+	       "self checks %d, no_desktop %d, show_desktop %d",
+	       no_default_window, kill_shell, perform_self_check,
+	       self->priv->no_desktop, self->priv->force_desktop);
 
 	g_application_register (application, NULL, &error);
 
