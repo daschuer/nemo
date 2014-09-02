@@ -314,6 +314,8 @@ drag_data_get_callback (GtkWidget *widget,
 			guint32 time,
 			gpointer data)
 {
+	NemoDragInfo *drag_info;
+
 	g_assert (widget != NULL);
 	g_assert (NEMO_IS_CANVAS_CONTAINER (widget));
 	g_return_if_fail (context != NULL);
@@ -322,11 +324,7 @@ drag_data_get_callback (GtkWidget *widget,
 	 * the selection data in the right format. Pass it means to
 	 * iterate all the selected icons.
 	 */
-	NemoDragInfo *drag_info = g_object_get_data (G_OBJECT (context), "drag-info");
-	if (drag_info->selection_cache == NULL) {
-		return;
-	}
-
+	drag_info = &(NEMO_CANVAS_CONTAINER (widget)->details->dnd_info->drag_info);
 	nemo_drag_drag_data_get_from_cache (drag_info->selection_cache, context, selection_data, info, time);
 }
 
@@ -1201,12 +1199,8 @@ remove_hover_timer (NemoCanvasDndInfo *dnd_info)
 }
 
 static void
-nemo_canvas_container_free_drag_data (NemoCanvasContainer *container)
+nemo_canvas_container_free_drag_data (NemoCanvasDndInfo *dnd_info)
 {
-	NemoCanvasDndInfo *dnd_info;
-
-	dnd_info = container->details->dnd_info;
-	
 	dnd_info->drag_info.got_drop_data_type = FALSE;
 
 	if (dnd_info->shadow != NULL) {
@@ -1228,6 +1222,7 @@ nemo_canvas_container_free_drag_data (NemoCanvasContainer *container)
 	dnd_info->target_uri = NULL;
 
 	remove_hover_timer (dnd_info);
+	g_clear_object(&dnd_info->drag_info.source_view);
 }
 
 static void
@@ -1247,7 +1242,6 @@ drag_leave_callback (GtkWidget *widget,
 	
 	set_drop_target (NEMO_CANVAS_CONTAINER (widget), NULL);
 	stop_auto_scroll (NEMO_CANVAS_CONTAINER (widget));
-	nemo_canvas_container_free_drag_data(NEMO_CANVAS_CONTAINER (widget));
 }
 
 static void
@@ -1292,9 +1286,9 @@ drag_begin_callback (GtkWidget      *widget,
 	drag_info->source_view = g_object_ref(view_container->view);
 
 	g_object_set_data_full (G_OBJECT (context),
-				"drag-info",
-				drag_info,
-				(GDestroyNotify)nemo_drag_finalize);
+				"dnd-info",
+				container->details->dnd_info,
+				(GDestroyNotify)nemo_canvas_container_free_drag_data);
 
 }
 
@@ -1550,7 +1544,6 @@ nemo_canvas_dnd_end_drag (NemoCanvasContainer *container)
 	dnd_info = container->details->dnd_info;
 	g_return_if_fail (dnd_info != NULL);
 	stop_auto_scroll (container);
-	container->details->dnd_info = NULL;
 }
 
 /** this callback is called in 2 cases.
@@ -1700,9 +1693,7 @@ drag_data_received_callback (GtkWidget *widget,
 			break;
 		}
 		gtk_drag_finish (context, success, FALSE, time);
-		
-		nemo_canvas_container_free_drag_data (NEMO_CANVAS_CONTAINER (widget));
-		
+
 		set_drop_target (NEMO_CANVAS_CONTAINER (widget), NULL);
 
 		/* reinitialise it for the next dnd */
