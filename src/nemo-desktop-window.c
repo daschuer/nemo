@@ -231,6 +231,18 @@ map (GtkWidget *widget)
 static void
 unrealize (GtkWidget *widget)
 {
+	NemoDesktopWindow *window;
+	NemoDesktopWindowDetails *details;
+
+	window = NEMO_DESKTOP_WINDOW (widget);
+	details = window->details;
+
+	if (details->size_changed_id != 0) {
+		g_signal_handler_disconnect (gtk_window_get_screen (GTK_WINDOW (window)),
+					     details->size_changed_id);
+		details->size_changed_id = 0;
+	}
+
 	GTK_WIDGET_CLASS (nemo_desktop_window_parent_class)->unrealize (widget);
 }
 
