@@ -1186,6 +1186,7 @@ locations_from_file_list (GList *file_list)
 	return g_list_reverse (ret);
 }
 
+#if GLIB_CHECK_VERSION(2,36,0)
 typedef struct {
 	GHashTable *original_dirs_hash;
 	GtkWindow  *parent_window;
@@ -1264,6 +1265,7 @@ restore_files_ensure_parent_directories (GHashTable *original_dirs_hash,
 	g_task_run_in_thread (ensure_dirs_task, ensure_dirs_task_thread_func);
 	g_object_unref (ensure_dirs_task);
 }
+#endif // GLIB_CHECK_VERSION(2,36,0)
 
 void
 nemo_restore_files_from_trash (GList *files,
@@ -1289,8 +1291,31 @@ nemo_restore_files_from_trash (GList *files,
 	}
 
 	if (original_dirs_hash != NULL) {
+#if GLIB_CHECK_VERSION(2,36,0)
 		restore_files_ensure_parent_directories (original_dirs_hash, parent_window);
 		g_hash_table_unref (original_dirs_hash);
+#else
+		GList *original_dirs = g_hash_table_get_keys (original_dirs_hash);
+		for (l = original_dirs; l != NULL; l = l->next) {
+			NemoFile *original_dir = NEMO_FILE (l->data);
+			GFile *original_dir_location = nemo_file_get_location (original_dir);
+
+			files = g_hash_table_lookup (original_dirs_hash, original_dir);
+			GList *locations = locations_from_file_list (files);
+
+			nemo_file_operations_move
+				(locations, NULL, 
+				 original_dir_location,
+				 parent_window,
+				 NULL, NULL);
+
+			g_list_free_full (locations, g_object_unref);
+			g_object_unref (original_dir_location);
+		}
+
+		g_list_free (original_dirs);
+		g_hash_table_destroy (original_dirs_hash);
+#endif 
 	}
 
 	nemo_file_list_unref (unhandled_files);
