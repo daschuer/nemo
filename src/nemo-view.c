@@ -9832,6 +9832,7 @@ real_update_menus (NemoView *view)
 	gboolean selection_contains_recent;
 	gboolean can_create_files;
 	gboolean can_delete_files;
+	gboolean can_move_files;
 	gboolean can_trash_files;
 	gboolean can_copy_files;
 	gboolean can_link_files;
@@ -9876,6 +9877,7 @@ real_update_menus (NemoView *view)
                      && !selection_contains_special_link;
 
 	can_duplicate_files = can_create_files && can_copy_files;
+	can_move_files = can_delete_files && !selection_contains_recent;
 	can_link_files = can_create_files && can_copy_files;
 
 	action = gtk_action_group_get_action (view->details->dir_action_group,
@@ -10192,7 +10194,7 @@ real_update_menus (NemoView *view)
 
 	action = gtk_action_group_get_action (view->details->dir_action_group,
 					      NEMO_ACTION_CUT);
-	gtk_action_set_sensitive (action, can_delete_files);
+	gtk_action_set_sensitive (action, can_move_files);
 	gtk_action_set_visible (action, !selection_contains_recent);
 
 	action = gtk_action_group_get_action (view->details->dir_action_group,
@@ -10257,11 +10259,11 @@ real_update_menus (NemoView *view)
 	action = gtk_action_group_get_action (view->details->dir_action_group,
 					      NEMO_ACTION_MOVE_TO_HOME);
 	gtk_action_set_sensitive (action, can_delete_files);
-    gtk_action_set_visible (action, !selection_contains_recent);
+	gtk_action_set_visible (action, !selection_contains_recent);
 	action = gtk_action_group_get_action (view->details->dir_action_group,
 					      NEMO_ACTION_MOVE_TO_DESKTOP);
 	gtk_action_set_sensitive (action, can_delete_files);
-	gtk_action_set_visible (action, show_desktop_target && !selection_contains_recent);
+	gtk_action_set_visible (action, !selection_contains_recent && show_desktop_target);
 
 	action = gtk_action_group_get_action (view->details->dir_action_group,
 					      "CopyToMenu");
@@ -10270,7 +10272,7 @@ real_update_menus (NemoView *view)
 	action = gtk_action_group_get_action (view->details->dir_action_group,
 					      "MoveToMenu");
 	gtk_action_set_sensitive (action, can_delete_files);
-    gtk_action_set_visible (action, !selection_contains_recent);
+	gtk_action_set_visible (action, !selection_contains_recent);
 
     action = gtk_action_group_get_action (view->details->dir_action_group,
                                           NEMO_ACTION_FOLLOW_SYMLINK);
