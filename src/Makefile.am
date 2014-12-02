@@ -145,8 +145,6 @@ nemo_SOURCES = \
 	nemo-properties-window.h		\
 	nemo-query-editor.c			\
 	nemo-query-editor.h			\
-	nemo-search-bar.c			\
-	nemo-search-bar.h			\
 	nemo-self-check-functions.c 	\
 	nemo-self-check-functions.h 	\
     nemo-statusbar.c    \
