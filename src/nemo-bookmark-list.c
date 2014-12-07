@@ -705,9 +705,9 @@ op_processed_cb (NemoBookmarkList *self)
 }
 
 static void
-load_files_finish (NemoBookmarkList *bookmarks,
-                   GObject          *source,
-                   GAsyncResult     *res)
+load_files_finish (GObject *source_object,
+                   GAsyncResult *res,
+				   gpointer user_data)
 {
     GError *error = NULL;
 
@@ -719,6 +719,7 @@ load_files_finish (NemoBookmarkList *bookmarks,
         return;
     }
 
+    NemoBookmarkList *bookmarks = NEMO_BOOKMARK_LIST (source_object);
     GList *old_list = bookmarks->list;
     bookmarks->list = new_list;
 
