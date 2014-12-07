@@ -10238,6 +10238,10 @@ real_update_menus (NemoView *view)
 	else
 		gtk_action_set_visible (action, !selection_contains_recent);
 
+	if (can_create_files && view->details->templates_invalid) {
+		update_templates_menu (view);
+	}
+
     if (view->details->actions_invalid) {
         update_actions_menu (view);
     }
