@@ -348,6 +348,7 @@ CFLAGS="$CFLAGS -O3"
 AC_CONFIG_FILES([
 Makefile
 data/Makefile
+data/icons/Makefile
 data/nemo.desktop.in
 data/nemo-autorun-software.desktop.in
 data/nemo-connect-server.desktop.in
