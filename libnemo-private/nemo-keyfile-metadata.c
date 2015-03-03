@@ -1,33 +1,34 @@
 /* -*- Mode: C; indent-tabs-mode: t; c-basic-offset: 8; tab-width: 8 -*- */
 /*
- * Nemo
+ * Nautilus
  *
  * Copyright (C) 2011 Red Hat, Inc.
  *
- * Nemo is free software; you can redistribute it and/or
+ * Nautilus is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation; either version 2 of the
  * License, or (at your option) any later version.
  *
- * Nemo is distributed in the hope that it will be useful,
+ * Nautilus is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public
  * License along with this program; see the file COPYING.  If not,
- * see <http://www.gnu.org/licenses/>.
+ * write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
  *
  * Authors: Cosimo Cecchi <cosimoc@redhat.com>
  */
 
 #include <config.h>
 
-#include "nemo-keyfile-metadata.h"
+#include "nautilus-keyfile-metadata.h"
 
-#include "nemo-directory-notify.h"
-#include "nemo-file-private.h"
-#include "nemo-file-utilities.h"
+#include "nautilus-directory-notify.h"
+#include "nautilus-file-private.h"
+#include "nautilus-file-utilities.h"
 
 #include <glib/gstdio.h>
 
@@ -160,7 +161,7 @@ save_in_idle (const char *keyfile_filename)
 }
 
 void
-nemo_keyfile_metadata_set_string (NemoFile *file,
+nautilus_keyfile_metadata_set_string (NautilusFile *file,
                                       const char *keyfile_filename,
                                       const gchar *name,
                                       const gchar *key,
@@ -177,15 +178,15 @@ nemo_keyfile_metadata_set_string (NemoFile *file,
 
 	save_in_idle (keyfile_filename);
 
-	if (nemo_keyfile_metadata_update_from_keyfile (file, keyfile_filename, name)) {
-		nemo_file_changed (file);
+	if (nautilus_keyfile_metadata_update_from_keyfile (file, keyfile_filename, name)) {
+		nautilus_file_changed (file);
 	}
 }
 
-#define STRV_TERMINATOR "@x-nemo-desktop-metadata-term@"
+#define STRV_TERMINATOR "@x-nautilus-desktop-metadata-term@"
 
 void
-nemo_keyfile_metadata_set_stringv (NemoFile *file,
+nautilus_keyfile_metadata_set_stringv (NautilusFile *file,
                                        const char *keyfile_filename,
                                        const char *name,
                                        const char *key,
@@ -193,7 +194,8 @@ nemo_keyfile_metadata_set_stringv (NemoFile *file,
 {
 	GKeyFile *keyfile;
 	guint length;
-	const gchar **actual_stringv = NULL;
+	gchar **actual_stringv = NULL;
+	gboolean free_strv = FALSE;
 
 	keyfile = get_keyfile (keyfile_filename);
 
@@ -205,31 +207,35 @@ nemo_keyfile_metadata_set_stringv (NemoFile *file,
 
 	if (length == 1) {
 		actual_stringv = g_malloc0 (3 * sizeof (gchar *));
-		actual_stringv[0] = stringv[0];
+		actual_stringv[0] = (gchar *) stringv[0];
 		actual_stringv[1] = STRV_TERMINATOR;
 		actual_stringv[2] = NULL;
 
 		length = 2;
-		stringv = actual_stringv;
+		free_strv = TRUE;
+	} else {
+		actual_stringv = (gchar **) stringv;
 	}
 
 	g_key_file_set_string_list (keyfile,
 	                            name,
 	                            key,
-	                            stringv,
+	                            (const gchar **) actual_stringv,
 	                            length);
 
 	save_in_idle (keyfile_filename);
 
-	if (nemo_keyfile_metadata_update_from_keyfile (file, keyfile_filename, name)) {
-		nemo_file_changed (file);
+	if (nautilus_keyfile_metadata_update_from_keyfile (file, keyfile_filename, name)) {
+		nautilus_file_changed (file);
 	}
 
-	g_free (actual_stringv);
+	if (free_strv) {
+		g_free (actual_stringv);
+	}
 }
 
 gboolean
-nemo_keyfile_metadata_update_from_keyfile (NemoFile *file,
+nautilus_keyfile_metadata_update_from_keyfile (NautilusFile *file,
                                                const char *keyfile_filename,
                                                const gchar *name)
 {
@@ -240,7 +246,7 @@ nemo_keyfile_metadata_update_from_keyfile (NemoFile *file,
 	gsize length, values_length;
 	GKeyFile *keyfile;
 	GFileInfo *info;
-	gsize idx;
+	gint idx;
 	gboolean res;
 
 	keyfile = get_keyfile (keyfile_filename);
@@ -303,7 +309,7 @@ nemo_keyfile_metadata_update_from_keyfile (NemoFile *file,
 		g_strfreev (values);
 	}
 
-	res = nemo_file_update_metadata_from_info (file, info);
+	res = nautilus_file_update_metadata_from_info (file, info);
 
 	g_strfreev (keys);
 	g_object_unref (info);
