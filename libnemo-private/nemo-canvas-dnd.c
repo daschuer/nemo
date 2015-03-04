@@ -73,8 +73,9 @@ static const GtkTargetEntry drop_types [] = {
 	{ (gchar *) NEMO_ICON_DND_GNOME_ICON_LIST_TYPE, 0, NEMO_ICON_DND_GNOME_ICON_LIST },
 	/* prefer "_NETSCAPE_URL" over "text/uri-list" to satisfy web browsers. */
 	{ (gchar *) NEMO_ICON_DND_NETSCAPE_URL_TYPE, 0, NEMO_ICON_DND_NETSCAPE_URL },
-	{ (gchar *) NEMO_ICON_DND_URI_LIST_TYPE, 0, NEMO_ICON_DND_URI_LIST },
+	/* prefer XDS over "text/uri-list" */	
 	{ (gchar *) NEMO_ICON_DND_XDNDDIRECTSAVE_TYPE, 0, NEMO_ICON_DND_XDNDDIRECTSAVE }, /* XDS Protocol Type */
+    { (gchar *) NEMO_ICON_DND_URI_LIST_TYPE, 0, NEMO_ICON_DND_URI_LIST },
 	{ (gchar *) NEMO_ICON_DND_RAW_TYPE, 0, NEMO_ICON_DND_RAW },
 	/* Must be last: */
 	{ (gchar *) NEMO_ICON_DND_ROOTWINDOW_DROP_TYPE,  0, NEMO_ICON_DND_ROOTWINDOW_DROP }
