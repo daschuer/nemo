@@ -1059,7 +1059,7 @@ nemo_view_confirm_multiple (GtkWindow *parent_window,
 						   "This will open %'d separate windows.", count), count);
 	}
 	dialog = eel_show_yes_no_dialog (prompt, detail, 
-					 GTK_STOCK_OK, GTK_STOCK_CANCEL,
+					 _("_OK"), _("_Cancel"),
 					 parent_window);
 	g_free (detail);
 
@@ -1600,11 +1600,11 @@ select_pattern (NemoView *view)
 	dialog = gtk_dialog_new_with_buttons (_("Select Items Matching"),
 					      nemo_view_get_containing_window (view),
 					      GTK_DIALOG_DESTROY_WITH_PARENT,
-					      GTK_STOCK_HELP,
+					      _("_Help"),
 					      GTK_RESPONSE_HELP,
-					      GTK_STOCK_CANCEL,
+					      _("_Cancel"),
 					      GTK_RESPONSE_CANCEL,
-					      GTK_STOCK_OK,
+					      _("_OK"),
 					      GTK_RESPONSE_OK,
 					      NULL);
 	gtk_dialog_set_default_response (GTK_DIALOG (dialog),
@@ -1734,10 +1734,10 @@ action_save_search_as_callback (GtkAction *action,
 		dialog = gtk_dialog_new_with_buttons (_("Save Search as"),
 						      nemo_view_get_containing_window (directory_view),
 						      0,
-						      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+						      _("_Cancel"), GTK_RESPONSE_CANCEL,
 						      NULL);
 		save_button = gtk_dialog_add_button (GTK_DIALOG (dialog),
-						     GTK_STOCK_SAVE, GTK_RESPONSE_OK);
+						     _("_Save"), GTK_RESPONSE_OK);
 		gtk_dialog_set_default_response (GTK_DIALOG (dialog),
 						 GTK_RESPONSE_OK);
 		gtk_container_set_border_width (GTK_CONTAINER (dialog), 5);
@@ -7090,7 +7090,7 @@ copy_or_move_selection (NemoView *view,
 	dialog = gtk_file_chooser_dialog_new (title,
 					      GTK_WINDOW (nemo_view_get_window (view)),
 					      GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
-					      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+					      _("_Cancel"), GTK_RESPONSE_CANCEL,
 					      _("_Select"), GTK_RESPONSE_OK,
 					      NULL);
 	gtk_window_set_destroy_with_parent (GTK_WINDOW (dialog), TRUE);
