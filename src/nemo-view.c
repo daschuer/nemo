@@ -9904,7 +9904,6 @@ real_update_menus (NemoView *view)
 					  selection_count == 1 &&
 					  nemo_view_can_rename_file (view, selection->data));
 	}
-	gtk_action_set_visible (action, !selection_contains_recent);
 
     gtk_action_set_visible (action, !selection_contains_recent && !selection_contains_special_link);
 
