@@ -681,8 +681,6 @@ nemo_application_finalize (GObject *object)
 	g_clear_object (&application->priv->progress_handler);
 	g_clear_object (&application->priv->bookmark_list);
 
-	g_free (application->priv->geometry);
-
 	g_clear_object (&application->priv->dbus_manager);
 	g_clear_object (&application->priv->fdb_manager);
 	g_clear_object (&application->priv->search_provider);
@@ -714,12 +712,6 @@ do_cmdline_sanity_checks (NemoApplication *self,
 		goto out;
 	}
 
-	if (self->priv->geometry != NULL &&
-	    remaining != NULL && remaining[0] != NULL && remaining[1] != NULL) {
-		g_printerr ("%s\n",
-			    _("--geometry cannot be used with more than one URI."));
-		goto out;
-	}
 
 	if (select_uris && remaining == NULL) {
 		g_printerr ("%s\n",
@@ -846,6 +838,7 @@ nemo_application_local_command_line (GApplication *application,
 #ifndef GNOME_BUILD
 	gboolean fix_cache = FALSE;
 #endif
+	gchar *geometry = NULL;
 	gchar **remaining = NULL;
 	NemoApplication *self = NEMO_APPLICATION (application);
 
@@ -857,10 +850,11 @@ nemo_application_local_command_line (GApplication *application,
 		/* dummy, only for compatibility reasons */
 		{ "browser", '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &browser,
 		  NULL, NULL },
+                /* ditto */
+		{ "geometry", 'g', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &geometry,
+		  N_("Create the initial window with the given geometry."), N_("GEOMETRY") },
 		{ "version", '\0', 0, G_OPTION_ARG_NONE, &version,
 		  N_("Show the version of the program."), NULL },
-		{ "geometry", 'g', 0, G_OPTION_ARG_STRING, &self->priv->geometry,
-		  N_("Create the initial window with the given geometry."), N_("GEOMETRY") },
 		{ "new-window", 'w', 0, G_OPTION_ARG_NONE, &open_new_window,
 		  N_("Always open a new window for browsing specified URIs"), NULL },
 		{ "no-default-window", 'n', 0, G_OPTION_ARG_NONE, &no_default_window,
@@ -1018,6 +1012,7 @@ nemo_application_local_command_line (GApplication *application,
 	g_free (files);
 
  out:
+	g_free (geometry);
 	g_option_context_free (context);
 	nemo_profile_end (NULL);
 
