@@ -97,12 +97,6 @@
 #include <libcinnamon-desktop/gnome-desktop-thumbnail.h>
 #endif
 
-/* Keep window from shrinking down ridiculously small; numbers are somewhat arbitrary */
-#define APPLICATION_WINDOW_MIN_WIDTH	300
-#define APPLICATION_WINDOW_MIN_HEIGHT	100
-
-#define START_STATE_CONFIG "start-state"
-
 #define NEMO_ACCEL_MAP_SAVE_DELAY 30
 
 /* The saving of the accelerator map was requested  */
