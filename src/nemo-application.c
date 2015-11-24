@@ -53,7 +53,6 @@
 #include "nemo-blank-desktop-window.h"
 
 #include <libnemo-private/nemo-dbus-manager.h>
-#include <libnemo-private/nemo-desktop-link-monitor.h>
 #include <libnemo-private/nemo-directory-private.h>
 #include <libnemo-private/nemo-file-utilities.h>
 #include <libnemo-private/nemo-file-operations.h>
@@ -96,6 +95,10 @@
 #else
 #include <libcinnamon-desktop/gnome-desktop-thumbnail.h>
 #endif
+
+/* Keep window from shrinking down ridiculously small; numbers are somewhat arbitrary */
+#define APPLICATION_WINDOW_MIN_WIDTH	300
+#define APPLICATION_WINDOW_MIN_HEIGHT	100
 
 #define NEMO_ACCEL_MAP_SAVE_DELAY 30
 
@@ -952,7 +955,14 @@ nemo_application_local_command_line (GApplication *application,
 	if (self->priv->force_desktop) {
 		DEBUG ("Forcing desktop, as requested");
 		g_action_group_activate_action (G_ACTION_GROUP (application),
-						"force-desktop", NULL);
+						"open-desktop", NULL);
+                /* fall through */
+	}
+
+	if (self->priv->no_desktop) {
+		DEBUG ("Forcing desktop off, as requested");
+		g_action_group_activate_action (G_ACTION_GROUP (application),
+						"close-desktop", NULL);
                 /* fall through */
 	}
 

@@ -34,6 +34,7 @@
 #include <glib/gi18n.h>
 
 #include <eel/eel-vfs-extensions.h>
+#include <libnemo-private/nemo-desktop-link-monitor.h>
 #include <libnemo-private/nemo-file-utilities.h>
 #include <libnemo-private/nemo-icon-names.h>
 #include <libnemo-private/nemo-global-preferences.h>
@@ -51,6 +52,8 @@ struct NemoDesktopWindowDetails {
 	gulong size_changed_id;
     gint monitor;
 	gboolean loaded;
+
+	GtkWidget *desktop_selection;
 };
 
 static GParamSpec *properties[NUM_PROPERTIES] = { NULL, };
@@ -74,20 +77,20 @@ nemo_desktop_window_update_directory (NemoDesktopWindow *window)
 }
 
 static void
-nemo_desktop_window_constructed (GObject *obj)
+nemo_desktop_window_finalize (GObject *obj)
 {
-	GtkActionGroup *action_group;
+	nemo_desktop_link_monitor_shutdown ();
+
+	G_OBJECT_CLASS (nemo_desktop_window_parent_class)->finalize (obj);
+}
+
+static void
+nemo_desktop_window_init_actions (NemoDesktopWindow *window)
+{
 	GtkAction *action;
-	AtkObject *accessible;
-	NemoDesktopWindow *window = NEMO_DESKTOP_WINDOW (obj);
-	NemoWindow *nwindow = NEMO_WINDOW (obj);
+	GtkActionGroup *action_group;
 
-	G_OBJECT_CLASS (nemo_desktop_window_parent_class)->constructed (obj);
-	
-	gtk_widget_hide (nwindow->details->statusbar);
-	gtk_widget_hide (nwindow->details->menubar);
-
-	action_group = nemo_window_get_main_action_group (nwindow);
+	action_group = nemo_window_get_main_action_group (NEMO_WINDOW (window));
 
 	/* Don't allow close action on desktop */
 	action = gtk_action_group_get_action (action_group,
@@ -103,6 +106,107 @@ nemo_desktop_window_constructed (GObject *obj)
 	action = gtk_action_group_get_action (action_group,
 					      NEMO_ACTION_SEARCH);
 	gtk_action_set_sensitive (action, FALSE);
+}
+
+static void
+selection_get_cb (GtkWidget          *widget,
+		  GtkSelectionData   *selection_data,
+		  guint               info,
+		  guint               time)
+{
+	/* No extra targets atm */
+}
+
+static gboolean
+selection_clear_event_cb (GtkWidget	        *widget,
+			  GdkEventSelection     *event,
+			  NemoDesktopWindow *window)
+{
+	gtk_widget_destroy (GTK_WIDGET (window));
+
+	return TRUE;
+}
+
+static void
+nemo_desktop_window_init_selection (NemoDesktopWindow *window)
+{
+	char selection_name[32];
+	GdkAtom selection_atom;
+	Window selection_owner;
+	GdkDisplay *display;
+	GtkWidget *selection_widget;
+	GdkScreen *screen;
+
+	screen = gdk_screen_get_default ();
+
+	g_snprintf (selection_name, sizeof (selection_name),
+		    "_NET_DESKTOP_MANAGER_S%d", gdk_screen_get_number (screen));
+	selection_atom = gdk_atom_intern (selection_name, FALSE);
+	display = gdk_screen_get_display (screen);
+
+	selection_owner = XGetSelectionOwner (GDK_DISPLAY_XDISPLAY (display),
+					      gdk_x11_atom_to_xatom_for_display (display,
+										 selection_atom));
+	if (selection_owner != None) {
+		g_critical ("Another desktop manager in use; desktop window won't be created");
+		return;
+	}
+
+	selection_widget = gtk_invisible_new_for_screen (screen);
+	/* We need this for gdk_x11_get_server_time() */
+	gtk_widget_add_events (selection_widget, GDK_PROPERTY_CHANGE_MASK);
+
+	if (!gtk_selection_owner_set_for_display (display,
+						  selection_widget,
+						  selection_atom,
+						  gdk_x11_get_server_time (gtk_widget_get_window (selection_widget)))) {
+		gtk_widget_destroy (selection_widget);
+		g_critical ("Can't set ourselves as selection owner for desktop manager; "
+			    "desktop window won't be created");
+		return;
+	}
+
+	g_signal_connect (selection_widget, "selection-get",
+			  G_CALLBACK (selection_get_cb), window);
+	g_signal_connect (selection_widget, "selection-clear-event",
+			  G_CALLBACK (selection_clear_event_cb), window);
+
+	window->details->desktop_selection = selection_widget;
+}
+
+static void
+nemo_desktop_window_constructed (GObject *obj)
+{
+	AtkObject *accessible;
+	NemoDesktopWindow *window = NEMO_DESKTOP_WINDOW (obj);
+	GdkRGBA transparent = {0, 0, 0, 0};
+
+    gtk_widget_override_background_color (GTK_WIDGET (window), 0, &transparent);
+
+	G_OBJECT_CLASS (nemo_desktop_window_parent_class)->constructed (obj);
+
+	NemoWindow *nwindow = NEMO_WINDOW (obj);
+	gtk_widget_hide (nwindow->details->statusbar);
+	gtk_widget_hide (nwindow->details->menubar);
+
+	/* Initialize the desktop link monitor singleton */
+	nemo_desktop_link_monitor_get ();
+
+	gtk_window_move (GTK_WINDOW (window), 0, 0);
+
+	/* shouldn't really be needed given our semantic type
+	 * of _NET_WM_TYPE_DESKTOP, but why not
+	 */
+	gtk_window_set_resizable (GTK_WINDOW (window),
+				  FALSE);
+	gtk_window_set_decorated (GTK_WINDOW (window),
+				  FALSE);
+
+	g_object_set_data (G_OBJECT (window), "is_desktop_window", 
+			   GINT_TO_POINTER (1));
+
+	nemo_desktop_window_init_selection (window);
+	nemo_desktop_window_init_actions (window);
 
 	/* Set the accessible name so that it doesn't inherit the cryptic desktop URI. */
 	accessible = gtk_widget_get_accessible (GTK_WIDGET (window));
@@ -111,24 +215,9 @@ nemo_desktop_window_constructed (GObject *obj)
 		atk_object_set_name (accessible, _("Desktop"));
 	}
 
-    GdkRectangle rect;
+	/* Special sawmill setting */
+	gtk_window_set_wmclass (GTK_WINDOW (window), "desktop_window", "Nemo");
 
-    nemo_desktop_utils_get_monitor_geometry (window->details->monitor, &rect);
-
-    DEBUG ("NemoDesktopWindow monitor:%d: x:%d, y:%d, w:%d, h:%d",
-           window->details->monitor,
-           rect.x, rect.y,
-           rect.width, rect.height);
-
-    gtk_window_move (GTK_WINDOW (window), rect.x, rect.y);
-    gtk_widget_set_size_request (GTK_WIDGET (window), rect.width, rect.height);
-
-    gtk_window_set_resizable (GTK_WINDOW (window),
-                  FALSE);
-    gtk_window_set_decorated (GTK_WINDOW (window),
-    			  FALSE);
-
-    gtk_widget_show (GTK_WIDGET (window));
 	nemo_desktop_window_update_directory (window);
 }
 
@@ -173,9 +262,6 @@ nemo_desktop_window_init (NemoDesktopWindow *window)
 {
 	window->details = G_TYPE_INSTANCE_GET_PRIVATE (window, NEMO_TYPE_DESKTOP_WINDOW,
 						       NemoDesktopWindowDetails);
-
-	g_object_set_data (G_OBJECT (window), "is_desktop_window", 
-			   GINT_TO_POINTER (1));
 
 	/* Make it easier for themes authors to style the desktop window separately */
 	gtk_style_context_add_class (gtk_widget_get_style_context (GTK_WIDGET (window)), "nemo-desktop-window");
@@ -247,6 +333,8 @@ unrealize (GtkWidget *widget)
 		details->size_changed_id = 0;
 	}
 
+	gtk_widget_destroy (details->desktop_selection);
+
 	GTK_WIDGET_CLASS (nemo_desktop_window_parent_class)->unrealize (widget);
 }
 
@@ -307,6 +395,7 @@ nemo_desktop_window_class_init (NemoDesktopWindowClass *klass)
 	GObjectClass *oclass = G_OBJECT_CLASS (klass);
 
 	oclass->constructed = nemo_desktop_window_constructed;
+	oclass->finalize = nemo_desktop_window_finalize;
     oclass->set_property = nemo_desktop_window_set_property;
     oclass->get_property = nemo_desktop_window_get_property;
 
