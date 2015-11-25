@@ -943,16 +943,14 @@ nemo_application_handle_local_options (GApplication *application,
 
 	if (g_variant_dict_contains (options, "force-desktop")) {
 		DEBUG ("Forcing desktop, as requested");
+		self->priv->force_desktop = TRUE;
 		g_action_group_activate_action (G_ACTION_GROUP (application),
 						"open-desktop", NULL);
-                /* fall through */
-	}
-
-	if (g_variant_dict_contains (options, "no-desktop")) {
+	} else if (g_variant_dict_contains (options, "no-desktop")) {
 		DEBUG ("Forcing desktop off, as requested");
+		self->priv->force_desktop = TRUE;
 		g_action_group_activate_action (G_ACTION_GROUP (application),
 						"close-desktop", NULL);
-                /* fall through */
 	}
 
 	retval = nemo_application_handle_file_args (self, options);
@@ -1471,10 +1469,6 @@ nemo_application_startup (GApplication *app)
                               G_CALLBACK (menu_state_changed_callback), self);
 
 
-	/* Bookmarks and search */
-	self->priv->bookmark_list = nemo_bookmark_list_new ();
-	self->priv->search_provider = nemo_shell_search_provider_new ();
-
 	/* Check the user's .nemo directories and post warnings
 	 * if there are problems.
 	 */
@@ -1519,6 +1513,11 @@ nemo_application_dbus_register (GApplication	 *app,
 		return FALSE;
 	}
 
+	self->priv->search_provider = nemo_shell_search_provider_new ();
+	if (!nemo_shell_search_provider_register (self->priv->search_provider, connection, error)) {
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -1531,6 +1530,10 @@ nemo_application_dbus_unregister (GApplication	*app,
 
 	if (self->priv->dbus_manager) {
 		nemo_dbus_manager_unregister (self->priv->dbus_manager);
+	}
+
+	if (self->priv->search_provider) {
+		nemo_shell_search_provider_unregister (self->priv->search_provider);
 	}
 }
 
