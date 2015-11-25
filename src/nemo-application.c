@@ -134,6 +134,10 @@ struct _NemoApplicationPriv {
 NemoBookmarkList *
 nemo_application_get_bookmarks (NemoApplication *application)
 {
+	if (!application->priv->bookmark_list) {
+		application->priv->bookmark_list = nemo_bookmark_list_new ();
+	}
+
 	return application->priv->bookmark_list;
 }
 
@@ -406,13 +410,13 @@ get_window_slot_for_location (NemoApplication *application, GFile *location)
 
 static void
 open_window (NemoApplication *application,
-	     GFile *location, GdkScreen *screen, const char *geometry)
+	     GFile *location, const char *geometry)
 {
 	NemoWindow *window;
 	gboolean have_geometry;
 
 	nemo_profile_start (NULL);
-	window = nemo_application_create_window (application, screen);
+	window = nemo_application_create_window (application, gdk_screen_get_default ());
 
 	if (location != NULL) {
 		nemo_window_go_to (window, location);
@@ -435,41 +439,6 @@ open_window (NemoApplication *application,
 	}
 
 	nemo_profile_end (NULL);
-}
-
-static void
-open_windows (NemoApplication *application,
-	      gboolean force_new,
-	      GFile **files,
-	      gint n_files,
-	      GdkScreen *screen,
-	      const char *geometry)
-{
-	gint i;
-
-	if (files == NULL || files[0] == NULL) {
-		/* Open a window pointing at the default location. */
-		open_window (application, NULL, screen, geometry);
-	} else {
-		/* Open windows at each requested location. */
-		for (i = 0; i < n_files; ++i) {
-			NemoWindowSlot *slot = NULL;
-
-			if (!force_new)
-				slot = get_window_slot_for_location (application, files[i]);
-
-			if (!slot) {
-				open_window (application, files[i], screen, geometry);
-			} else {
-				/* We open the location again to update any possible selection */
-				nemo_window_slot_open_location (slot, files[i], 0);
-
-				NemoWindow *window = nemo_window_slot_get_window (slot);
-				nemo_window_set_active_slot (window, slot);
-				gtk_window_present (GTK_WINDOW (window));
-			}
-		}
-	}
 }
 
 void
@@ -517,13 +486,47 @@ nemo_application_open (GApplication *app,
 {
 	NemoApplication *self = NEMO_APPLICATION (app);
 
+	int i = 0;
+	gboolean force_new = FALSE;
+	gchar *geometry = NULL;
+	gchar **hints = g_strsplit (hint, " ", 2);
+	while (hints[i]) {
+		if (g_strcmp0 (hints[i], "new-window") == 0) {
+			force_new = TRUE;
+		}
+		if (g_strrstr (hints[i], "geometry=")) {
+			geometry = &(hints[i][sizeof("geometry=") - 1]);
+		}
+		++i;
+	}
+
+	NemoWindowSlot *slot = NULL;
+	NemoWindow *window;
+	GFile *file;
+	gint idx;
+
 	DEBUG ("Open called on the GApplication instance; %d files", n_files);
 
-	gboolean force_new = (g_strcmp0 (hint, "new-window") == 0);
+	/* Open windows at each requested location. */
+	for (idx = 0; idx < n_files; idx++) {
+		file = files[idx];
 
-	open_windows (self, force_new, files, n_files,
-		      gdk_screen_get_default (),
-		      self->priv->geometry);
+		if (!force_new) {
+			slot = get_window_slot_for_location (self, file);
+		}
+
+		if (!slot) {
+			open_window (self, file, geometry);
+		} else {
+			/* We open the location again to update any possible selection */
+			nemo_window_slot_open_location (slot, file, 0);
+
+			window = nemo_window_slot_get_window (slot);
+			nemo_window_set_active_slot (window, slot);
+			gtk_window_present (GTK_WINDOW (window));
+		}
+	}
+	g_strfreev(hints);
 }
 
 static GtkWindow *
@@ -813,11 +816,10 @@ const GOptionEntry options[] = {
 	/* dummy, only for compatibility reasons */
 	{ "browser", '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, NULL,
 	  NULL, NULL },
-	/* ditto */
-	{ "geometry", 'g', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, NULL,
-	  N_("Create the initial window with the given geometry."), N_("GEOMETRY") },
 	{ "version", '\0', 0, G_OPTION_ARG_NONE, NULL,
 	  N_("Show the version of the program."), NULL },
+	{ "geometry", 'g', 0, G_OPTION_ARG_STRING, NULL,
+	  N_("Create the initial window with the given geometry e.g.: 1454x782+51+206"), N_("GEOMETRY") },
 	{ "new-window", 'w', 0, G_OPTION_ARG_NONE, NULL,
 	  N_("Always open a new window for browsing specified URIs"), NULL },
 	{ "no-default-window", 'n', 0, G_OPTION_ARG_NONE, NULL,
@@ -1081,9 +1083,6 @@ init_icons_and_styles (void)
 static void
 init_desktop (NemoApplication *self)
 {
-	/* Initialize the desktop link monitor singleton */
-	nemo_desktop_link_monitor_get ();
-
     self->priv->desktop_manager = nemo_desktop_manager_get ();
 }
 
