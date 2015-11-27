@@ -53,6 +53,7 @@ struct NemoFileDetails
 
 	eel_ref_str display_name;
 	char *display_name_collation_key;
+	char *directory_name_collation_key;
 	eel_ref_str edit_name;
 
 	goffset size; /* -1 is unknown */
@@ -97,8 +98,8 @@ struct NemoFileDetails
     gint thumbnail_throttle_count;
     time_t last_thumbnail_try_mtime;
 
-    GdkPixbuf *scaled_thumbnail;
-    double thumbnail_scale;
+	GdkPixbuf *scaled_thumbnail;
+	double thumbnail_scale;
 
 	GList *mime_list; /* If this is a directory, the list of MIME types in it. */
 
@@ -237,9 +238,6 @@ NemoFile *nemo_file_new_from_info                  (NemoDirectory      *director
 							    GFileInfo              *info);
 void          nemo_file_emit_changed                   (NemoFile           *file);
 void          nemo_file_mark_gone                      (NemoFile           *file);
-
-void          nemo_file_set_directory                  (NemoFile           *file,
-							    NemoDirectory      *directory);
 gboolean      nemo_file_get_date                       (NemoFile           *file,
 							    NemoDateType        date_type,
 							    time_t                 *date);
@@ -265,6 +263,9 @@ gboolean      nemo_file_set_display_name               (NemoFile           *file
 							    const char             *display_name,
 							    const char             *edit_name,
 							    gboolean                custom);
+void          nemo_file_set_directory                  (NemoFile           *file,
+							    NemoDirectory      *directory);
+
 void          nemo_file_set_mount                      (NemoFile           *file,
 							    GMount                 *mount);
 
