@@ -355,6 +355,7 @@ bookmark_file_changed_callback (NemoFile *file,
 		nemo_bookmark_disconnect_file (bookmark);
         nemo_bookmark_set_icon_to_default (bookmark);
 	} else {
+		nemo_bookmark_update_icon (bookmark);
 		bookmark_set_name_from_ready_file (bookmark, file);
 
         if (metadata_changed (bookmark)) {
@@ -407,12 +408,12 @@ nemo_bookmark_connect_file (NemoBookmark *bookmark)
 		}
 	}
 
-	/* Set icon based on available information. */
-	nemo_bookmark_update_icon (bookmark);
-
-	if (bookmark->details->icon == NULL ||
-	    bookmark->details->symbolic_icon == NULL) {
-		nemo_bookmark_set_icon_to_default (bookmark);
+	if (bookmark->details->icon == NULL) {	
+		/* Set icon based on available information. */
+		nemo_bookmark_update_icon (bookmark);
+		if (bookmark->details->icon == NULL) {
+			nemo_bookmark_set_icon_to_default (bookmark);
+		}
 	}
 
 	if (bookmark->details->file != NULL &&
