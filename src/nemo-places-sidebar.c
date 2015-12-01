@@ -636,8 +636,10 @@ static GIcon *
 get_gicon (const gchar *uri)
 {
     NemoFile *file = nemo_file_get_by_uri (uri);
-
-    return nemo_file_get_emblemed_icon (file, NEMO_FILE_ICON_FLAGS_NONE);
+	NemoFileIconFlags flags =
+		NEMO_FILE_ICON_FLAGS_USE_EMBLEMS |
+		NEMO_FILE_ICON_FLAGS_USE_ONE_EMBLEM;
+    return nemo_file_get_gicon (file, flags);
 }
 
 static void
@@ -657,7 +659,7 @@ update_places (NemoPlacesSidebar *sidebar)
 	int bookmark_count, bookmark_index = 0;
 	char *location, *mount_uri, *name, *last_uri, *identifier;
 	const char *mount_uri_c;		
-    const gchar *bookmark_name;
+	const gchar *bookmark_name;
 	GIcon *icon;
 	GFile *root;
 	NemoWindowSlot *slot;
