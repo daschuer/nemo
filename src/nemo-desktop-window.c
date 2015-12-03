@@ -137,6 +137,8 @@ nemo_desktop_window_init_selection (NemoDesktopWindow *window)
 	GtkWidget *selection_widget;
 	GdkScreen *screen;
 
+	window->details->desktop_selection = NULL; 
+ 
 	screen = gdk_screen_get_default ();
 
 	g_snprintf (selection_name, sizeof (selection_name),
@@ -333,7 +335,9 @@ unrealize (GtkWidget *widget)
 		details->size_changed_id = 0;
 	}
 
-	gtk_widget_destroy (details->desktop_selection);
+	if (window->details->desktop_selection) { 
+		gtk_widget_destroy (details->desktop_selection);
+	}
 
 	GTK_WIDGET_CLASS (nemo_desktop_window_parent_class)->unrealize (widget);
 }
