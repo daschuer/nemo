@@ -820,6 +820,16 @@ get_activation_action (NemoFile *file)
 }
 
 gboolean
+nemo_mime_file_launches (NemoFile *file)
+{
+	ActivationAction activation_action;
+
+	activation_action = get_activation_action (file);
+
+	return (activation_action == ACTIVATION_ACTION_LAUNCH);
+}
+
+gboolean
 nemo_mime_file_opens_in_external_app (NemoFile *file)
 {
   ActivationAction activation_action;

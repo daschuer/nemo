@@ -9831,7 +9831,7 @@ real_update_menus (NemoView *view)
 	gboolean show_open_alternate;
 	gboolean show_open_in_new_tab;
 	gboolean can_open;
-	gboolean show_app;
+	gboolean show_app, show_run;
     gboolean showing_search;
 	gboolean show_save_search;
 	gboolean save_search_sensitive;
@@ -9840,7 +9840,6 @@ real_update_menus (NemoView *view)
 	GtkAction *action;
 	GAppInfo *app;
 	GIcon *app_icon;
-	// GtkWidget *menuitem;
 	gboolean next_pane_is_writable;
 	gboolean show_properties;
 
@@ -9865,7 +9864,7 @@ real_update_menus (NemoView *view)
 		!selection_contains_special_link &&
 		!selection_contains_desktop_or_home_dir;
 	can_copy_files = selection_count != 0
-                     && !selection_contains_special_link;
+		&& !selection_contains_special_link;
 
 	can_duplicate_files = can_create_files && can_copy_files;
 	can_move_files = can_delete_files && !selection_contains_recent;
@@ -9883,7 +9882,7 @@ real_update_menus (NemoView *view)
 					  nemo_view_can_rename_file (view, selection->data));
 	}
 
-    gtk_action_set_visible (action, !selection_contains_recent && !selection_contains_special_link);
+	gtk_action_set_visible (action, !selection_contains_recent && !selection_contains_special_link);
 
     gboolean no_selection_or_one_dir = ((selection_count == 1 && selection_contains_directory) ||
                                         selection_count == 0);
@@ -9914,7 +9913,7 @@ real_update_menus (NemoView *view)
 	g_object_set (action, "label", label_with_underscore, NULL);
 	g_free (label_with_underscore);
 
-	can_open = show_app = selection_count != 0;
+	can_open = show_app = show_run = selection_count != 0;
 
 	for (l = selection; l != NULL; l = l->next) {
 		NemoFile *file;
@@ -9925,7 +9924,11 @@ real_update_menus (NemoView *view)
 			show_app = FALSE;
 		}
 
-		if (!show_app) {
+		if (!nemo_mime_file_launches (file)) {
+			show_run = FALSE;
+		}
+
+		if (!show_app && !show_run) {
 			break;
 		}
 	} 
@@ -9953,10 +9956,14 @@ real_update_menus (NemoView *view)
 
 		g_free (escaped_app);
 		g_object_unref (app);
+	} else if (show_run) {
+		label_with_underscore = g_strdup (_("Run"));
+	} else {
+		label_with_underscore = g_strdup (_("_Open"));
 	}
 
 	if (app_icon == NULL) {
-		app_icon = g_themed_icon_new (GTK_STOCK_OPEN);
+		app_icon = g_themed_icon_new ("document-open");
 	}
 
     action = gtk_action_group_get_action (view->details->dir_action_group,
@@ -9964,7 +9971,7 @@ real_update_menus (NemoView *view)
     gtk_action_set_sensitive (action, selection_count != 0);
 
     g_object_set (action, "label", 
-              label_with_underscore ? label_with_underscore : _("_Open"),
+              label_with_underscore,
               NULL);
 
     gtk_action_set_gicon (action, app_icon);
