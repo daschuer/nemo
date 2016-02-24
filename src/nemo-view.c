@@ -9992,7 +9992,7 @@ real_update_menus (NemoView *view)
     g_free (label_with_underscore);
 
     menuitem = gtk_ui_manager_get_widget (
-                          nemo_window_get_ui_manager (view->details->window),
+                          nemo_view_get_ui_manager (view),
                           NEMO_VIEW_MENU_PATH_OPEN);
 
     /* Only force displaying the icon if it is an application icon */
@@ -10000,7 +10000,7 @@ real_update_menus (NemoView *view)
                            GTK_IMAGE_MENU_ITEM (menuitem), app_icon != NULL);
 
     menuitem = gtk_ui_manager_get_widget (
-                          nemo_window_get_ui_manager (view->details->window),
+                          nemo_view_get_ui_manager (view),
                           NEMO_VIEW_POPUP_PATH_OPEN);
 
     /* Only force displaying the icon if it is an application icon */
