@@ -1685,10 +1685,10 @@ drag_data_received_callback (GtkWidget *widget,
 
 				nemo_file_changes_queue_file_added (location);
 				p.x = x; p.y = y;
-                nemo_file_changes_queue_schedule_position_set (
-                                 location,
-                                 p,
-                                 nemo_desktop_utils_get_monitor_for_widget (widget));
+				nemo_file_changes_queue_schedule_position_set (
+				                 location,
+				                 p,
+				                 nemo_desktop_utils_get_monitor_for_widget (widget));
 				g_object_unref (location);
 				nemo_file_changes_consume_changes (TRUE);
 				success = TRUE;

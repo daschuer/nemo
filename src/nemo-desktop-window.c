@@ -194,13 +194,17 @@ nemo_desktop_window_constructed (GObject *obj)
 	/* Initialize the desktop link monitor singleton */
 	nemo_desktop_link_monitor_get ();
 
-	gtk_window_move (GTK_WINDOW (window), 0, 0);
+    GdkRectangle rect;
 
-	/* shouldn't really be needed given our semantic type
-	 * of _NET_WM_TYPE_DESKTOP, but why not
-	 */
-	gtk_window_set_resizable (GTK_WINDOW (window),
-				  FALSE);
+    nemo_desktop_utils_get_monitor_work_rect (window->details->monitor, &rect);
+
+    g_printerr ("NemoDesktopWindow monitor:%d: x:%d, y:%d, w:%d, h:%d\n", window->details->monitor, rect.x, rect.y, rect.width, rect.height);
+
+    gtk_window_move (GTK_WINDOW (window), rect.x, rect.y);
+    gtk_widget_set_size_request (GTK_WIDGET (window), rect.width, rect.height);
+
+    gtk_window_set_resizable (GTK_WINDOW (window),
+                  FALSE);
 	gtk_window_set_decorated (GTK_WINDOW (window),
 				  FALSE);
 
@@ -328,12 +332,6 @@ unrealize (GtkWidget *widget)
 
 	window = NEMO_DESKTOP_WINDOW (widget);
 	details = window->details;
-
-	if (details->size_changed_id != 0) {
-		g_signal_handler_disconnect (gtk_window_get_screen (GTK_WINDOW (window)),
-					     details->size_changed_id);
-		details->size_changed_id = 0;
-	}
 
 	if (window->details->desktop_selection) { 
 		gtk_widget_destroy (details->desktop_selection);

@@ -677,6 +677,8 @@ nemo_application_finalize (GObject *object)
 	g_clear_object (&application->priv->fdb_manager);
 	g_clear_object (&application->priv->search_provider);
 
+    g_clear_object (&application->priv->desktop_manager);
+
 	notify_uninit ();
 
         G_OBJECT_CLASS (nemo_application_parent_class)->finalize (object);
@@ -953,13 +955,9 @@ nemo_application_handle_local_options (GApplication *application,
 	if (g_variant_dict_contains (options, "force-desktop")) {
 		DEBUG ("Forcing desktop, as requested");
 		self->priv->force_desktop = TRUE;
-		g_action_group_activate_action (G_ACTION_GROUP (application),
-						"open-desktop", NULL);
 	} else if (g_variant_dict_contains (options, "no-desktop")) {
 		DEBUG ("Forcing desktop off, as requested");
-		self->priv->force_desktop = TRUE;
-		g_action_group_activate_action (G_ACTION_GROUP (application),
-						"close-desktop", NULL);
+		self->priv->no_desktop = TRUE;
 	}
 
 	if (g_variant_dict_contains (options, "no-default-window")) {
@@ -1719,7 +1717,7 @@ nemo_application_window_added (GtkApplication *app,
 	/* chain to parent */
 	GTK_APPLICATION_CLASS (nemo_application_parent_class)->window_added (app, window);
 
-	if (!NEMO_IS_BOOKMARKS_WINDOW (window)) {
+	if (!NEMO_IS_BOOKMARKS_WINDOW (window) && !NEMO_IS_BLANK_DESKTOP_WINDOW(window)) {
 		g_signal_connect (window, "slot-added", G_CALLBACK (on_slot_added), app);
 		g_signal_connect (window, "slot-removed", G_CALLBACK (on_slot_removed), app);
 	}

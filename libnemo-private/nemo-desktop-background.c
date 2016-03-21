@@ -118,6 +118,11 @@ nemo_desktop_background_finalize (GObject *object)
 					      background_settings_change_event_cb,
 					      self);
 
+	if (self->details->change_idle_id != 0) {
+		g_source_remove (self->details->change_idle_id);
+		self->details->change_idle_id = 0;
+	}
+
 	free_background_surface (self);
 	free_fade (self);
 

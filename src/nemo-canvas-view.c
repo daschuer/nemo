@@ -57,7 +57,6 @@
 #include <libnemo-private/nemo-clipboard.h>
 #include <libnemo-private/nemo-desktop-icon-file.h>
 #include <libnemo-private/nemo-desktop-utils.h>
-#include <libnemo-private/nemo-desktop-utils.h>
 
 #define DEBUG_FLAG NEMO_DEBUG_CANVAS_VIEW
 #include <libnemo-private/nemo-debug.h>
@@ -487,7 +486,11 @@ nemo_canvas_view_remove_file (NemoView *view, NemoFile *file, NemoDirectory *dir
 static gboolean
 should_show_file_on_current_monitor (NemoView *view, NemoFile *file)
 {
-    gint current_monitor = nemo_desktop_utils_get_monitor_for_widget (GTK_WIDGET (view));
+	if (!nemo_view_should_show_file (view, file)) {
+		return FALSE;
+	}	
+
+	gint current_monitor = nemo_desktop_utils_get_monitor_for_widget (GTK_WIDGET (view));
     gint file_monitor = nemo_file_get_monitor_number (file);
 
     NemoDesktopManager *dm = nemo_desktop_manager_get ();
