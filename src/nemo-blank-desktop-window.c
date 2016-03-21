@@ -330,13 +330,6 @@ set_wmspec_desktop_hint (GdkWindow *window)
 static void
 realize (GtkWidget *widget)
 {
-    GdkVisual *visual;
-
-    visual = gdk_screen_get_rgba_visual (gtk_widget_get_screen (widget));
-    if (visual) {
-        gtk_widget_set_visual (widget, visual);
-    }
-
 	GTK_WIDGET_CLASS (nemo_blank_desktop_window_parent_class)->realize (widget);
 
 	/* This is the new way to set up the desktop window */

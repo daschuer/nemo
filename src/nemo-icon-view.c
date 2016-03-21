@@ -58,6 +58,7 @@
 #include <libnemo-private/nemo-clipboard.h>
 #include <libnemo-private/nemo-desktop-icon-file.h>
 #include <libnemo-private/nemo-desktop-utils.h>
+#include <libnemo-private/nemo-desktop-utils.h>
 
 #define DEBUG_FLAG NEMO_DEBUG_ICON_VIEW
 #include <libnemo-private/nemo-debug.h>
