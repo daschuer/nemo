@@ -41,7 +41,6 @@
 #include <fcntl.h>
 #include <gdk/gdkx.h>
 #include <glib/gi18n.h>
-#include <libnemo-private/nemo-desktop-background.h>
 #include <libnemo-private/nemo-desktop-icon-file.h>
 #include <libnemo-private/nemo-directory-notify.h>
 #include <libnemo-private/nemo-file-changes-queue.h>
@@ -77,8 +76,6 @@ struct NemoDesktopIconViewDetails
 	gulong delayed_init_signal;
 	guint reload_desktop_timeout;
 	gboolean pending_rescan;
-
-	NemoDesktopBackground *background;
 };
 
 static void     default_zoom_level_changed                        (gpointer                user_data);
@@ -232,11 +229,6 @@ nemo_desktop_icon_view_dispose (GObject *object)
 	g_signal_handlers_disconnect_by_func (gnome_lockdown_preferences,
 					      nemo_view_update_menus,
 					      icon_view);
-
-	if (icon_view->details->background != NULL) {
-		g_object_unref (icon_view->details->background);
-		icon_view->details->background = NULL;
-	}
 
 	G_OBJECT_CLASS (nemo_desktop_icon_view_parent_class)->dispose (object);
 }
