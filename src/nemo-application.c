@@ -52,6 +52,7 @@
 #include "nemo-window-slot.h"
 #include "nemo-statusbar.h"
 #include "nemo-blank-desktop-window.h"
+#include "nemo-background-window.h"
 
 #include <libnemo-private/nemo-directory-private.h>
 #include <libnemo-private/nemo-file-changes-queue.h>
@@ -1539,7 +1540,9 @@ nemo_application_window_added (GtkApplication *app,
 	/* chain to parent */
 	GTK_APPLICATION_CLASS (nemo_application_parent_class)->window_added (app, window);
 
-	if (!NEMO_IS_BOOKMARKS_WINDOW (window) && !NEMO_IS_BLANK_DESKTOP_WINDOW(window)) {
+	if (!NEMO_IS_BOOKMARKS_WINDOW (window) &&
+			!NEMO_IS_BLANK_DESKTOP_WINDOW(window) &&
+			!NEMO_IS_BACKGROUND_WINDOW(window)) {
 		g_signal_connect (window, "slot-added", G_CALLBACK (on_slot_added), app);
 		g_signal_connect (window, "slot-removed", G_CALLBACK (on_slot_removed), app);
 	}

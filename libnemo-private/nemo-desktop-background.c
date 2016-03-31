@@ -285,19 +285,19 @@ nemo_desktop_background_set_up_widget (NemoDesktopBackground *self)
 {
 	GdkWindow *window;
 	gboolean in_fade = FALSE;
-        GtkWidget *widget;
+	GtkWidget *widget;
 
-        widget = self->details->widget;
+	widget = self->details->widget;
 
 	if (!gtk_widget_get_realized (widget)) {
 		return;
 	}
 
 	nemo_desktop_background_ensure_realized (self);
-        window = gtk_layout_get_bin_window (GTK_LAYOUT (widget));
+	window = gtk_widget_get_window (widget);
 
 	in_fade = fade_to_surface (self, window,
-				   self->details->background_surface);
+	                           self->details->background_surface);
 
 	if (!in_fade) {
 		cairo_pattern_t *pattern;
@@ -306,8 +306,8 @@ nemo_desktop_background_set_up_widget (NemoDesktopBackground *self)
 		gdk_window_set_background_pattern (window, pattern);
 		cairo_pattern_destroy (pattern);
 
-                gnome_bg_set_surface_as_root (gtk_widget_get_screen (widget),
-                                              self->details->background_surface);
+		gnome_bg_set_surface_as_root (gtk_widget_get_screen (widget),
+		                              self->details->background_surface);
 	}
 }
 
@@ -362,7 +362,7 @@ widget_realize_cb (GtkWidget *widget,
                    gpointer user_data)
 {
 	GdkScreen *screen;
-        NemoDesktopBackground *self = user_data;
+	NemoDesktopBackground *self = user_data;
 
 	screen = gtk_widget_get_screen (widget);
 
@@ -448,18 +448,18 @@ background_settings_change_event_cb (GSettings *settings,
 static void
 nemo_desktop_background_constructed (GObject *obj)
 {
-        NemoDesktopBackground *self;
-        GtkWidget *widget;
+	NemoDesktopBackground *self;
+	GtkWidget *widget;
 
-        self = NEMO_DESKTOP_BACKGROUND (obj);
+	self = NEMO_DESKTOP_BACKGROUND (obj);
 
-        if (G_OBJECT_CLASS (nemo_desktop_background_parent_class)->constructed != NULL) {
-                G_OBJECT_CLASS (nemo_desktop_background_parent_class)->constructed (obj);
-        }
+	if (G_OBJECT_CLASS (nemo_desktop_background_parent_class)->constructed != NULL) {
+	        G_OBJECT_CLASS (nemo_desktop_background_parent_class)->constructed (obj);
+	}
 
-        widget = self->details->widget;
+	widget = self->details->widget;
 
-        g_assert (GTK_IS_WIDGET (widget));
+	g_assert (GTK_IS_WIDGET (widget));
 
  	g_signal_connect_object (widget, "destroy",
                                  G_CALLBACK (on_widget_destroyed), self, 0);
@@ -468,14 +468,14 @@ nemo_desktop_background_constructed (GObject *obj)
 	g_signal_connect_object (widget, "unrealize",
 				 G_CALLBACK (widget_unrealize_cb), self, 0);
 
-        gnome_bg_load_from_preferences (self->details->bg,
+	gnome_bg_load_from_preferences (self->details->bg,
                                         gnome_background_preferences);
 
-        /* Let's receive batch change events instead of every single one */
-        g_signal_connect (gnome_background_preferences,
-                          "change-event",
-                          G_CALLBACK (background_settings_change_event_cb),
-                          self);
+	/* Let's receive batch change events instead of every single one */
+	g_signal_connect (gnome_background_preferences,
+	                  "change-event",
+	                  G_CALLBACK (background_settings_change_event_cb),
+	                  self);
 
 	queue_background_change (self);
 }
@@ -528,15 +528,15 @@ nemo_desktop_background_class_init (NemoDesktopBackgroundClass *klass)
 
 	object_class = G_OBJECT_CLASS (klass);
 	object_class->finalize = nemo_desktop_background_finalize;
-        object_class->set_property = nemo_desktop_background_set_property;
-        object_class->constructor = nemo_desktop_background_constructor;
-        object_class->constructed = nemo_desktop_background_constructed;
+	object_class->set_property = nemo_desktop_background_set_property;
+	object_class->constructor = nemo_desktop_background_constructor;
+	object_class->constructed = nemo_desktop_background_constructed;
 
-        pspec = g_param_spec_object ("widget", "The widget for this background",
-                                     "The widget that gets its background set",
-                                     NEMO_TYPE_CANVAS_CONTAINER,
-                                     G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
-        g_object_class_install_property (object_class, PROP_WIDGET, pspec);
+	pspec = g_param_spec_object ("widget", "The widget for this background",
+	                             "The widget that gets its background set",
+	                             GTK_TYPE_WIDGET,
+	                             G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+	g_object_class_install_property (object_class, PROP_WIDGET, pspec);
 
 	g_type_class_add_private (klass, sizeof (NemoDesktopBackgroundDetails));
 }
@@ -549,7 +549,7 @@ nemo_desktop_background_init (NemoDesktopBackground *self)
 					     NEMO_TYPE_DESKTOP_BACKGROUND,
 					     NemoDesktopBackgroundDetails);
 
-        self->details->bg = gnome_bg_new ();
+	self->details->bg = gnome_bg_new ();
 	self->details->default_color.red = 0xffff;
 	self->details->default_color.green = 0xffff;
 	self->details->default_color.blue = 0xffff;
@@ -561,7 +561,7 @@ nemo_desktop_background_init (NemoDesktopBackground *self)
 }
 
 NemoDesktopBackground *
-nemo_desktop_background_new (NemoCanvasContainer *container)
+nemo_desktop_background_new (GtkWidget *container)
 {
 	return g_object_new (NEMO_TYPE_DESKTOP_BACKGROUND,
                              "widget", container,
