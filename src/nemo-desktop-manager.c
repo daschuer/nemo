@@ -233,8 +233,8 @@ nemo_desktop_manager_constructed (GObject *object)
 
     manager->show_desktop_changed_id = g_signal_connect_swapped (nemo_desktop_preferences, 
                                                                  "changed::" NEMO_PREFERENCES_SHOW_DESKTOP,
-				  				 G_CALLBACK (layout_changed),
-				                                 manager);
+                                                                 G_CALLBACK (layout_changed),
+                                                                 manager);
 
     manager->desktop_layout_changed_id = g_signal_connect_swapped (nemo_desktop_preferences,
                                                                    "changed::" NEMO_PREFERENCES_DESKTOP_LAYOUT,
@@ -245,6 +245,12 @@ nemo_desktop_manager_constructed (GObject *object)
                                                          "size_changed",
                                                          G_CALLBACK (layout_changed),
                                                          manager);
+
+
+    manager->orphaned_icon_handling_id = g_signal_connect_swapped (nemo_preferences,
+                                                                   "changed::" NEMO_PREFERENCES_SHOW_ORPHANED_DESKTOP_ICONS,
+                                                                   G_CALLBACK (layout_changed),
+                                                                   manager);
 
     add_workarea_filter (manager);
 
@@ -262,6 +268,7 @@ nemo_desktop_manager_dispose (GObject *object)
     g_signal_handler_disconnect (nemo_desktop_preferences, manager->show_desktop_changed_id);
     g_signal_handler_disconnect (nemo_desktop_preferences, manager->desktop_layout_changed_id);
     g_signal_handler_disconnect (manager->screen, manager->size_changed_id);
+    g_signal_handler_disconnect (manager->screen, manager->orphaned_icon_handling_id);
 
     remove_workarea_filter (manager);
 
