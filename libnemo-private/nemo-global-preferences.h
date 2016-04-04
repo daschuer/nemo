@@ -266,6 +266,8 @@ extern GSettings *gnome_media_handling_preferences;
 extern GSettings *gnome_terminal_preferences;
 extern GSettings *cinnamon_privacy_preferences;
 
+gint64 nemo_startup_time;
+
 G_END_DECLS
 
 #endif /* NEMO_GLOBAL_PREFERENCES_H */
