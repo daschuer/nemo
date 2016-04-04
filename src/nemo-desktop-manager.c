@@ -258,7 +258,7 @@ nemo_desktop_manager_dispose (GObject *object)
     g_signal_handler_disconnect (nemo_desktop_preferences, manager->show_desktop_changed_id);
     g_signal_handler_disconnect (nemo_desktop_preferences, manager->desktop_layout_changed_id);
     g_signal_handler_disconnect (manager->screen, manager->size_changed_id);
-    g_signal_handler_disconnect (nemo_preferences, manager->orphaned_icon_handling_id);
+    g_signal_handler_disconnect (manager->screen, manager->orphaned_icon_handling_id);
 
     G_OBJECT_CLASS (nemo_desktop_manager_parent_class)->dispose (object);
 }

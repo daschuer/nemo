@@ -198,7 +198,10 @@ nemo_desktop_window_constructed (GObject *obj)
 
     nemo_desktop_utils_get_monitor_work_rect (window->details->monitor, &rect);
 
-    g_printerr ("NemoDesktopWindow monitor:%d: x:%d, y:%d, w:%d, h:%d\n", window->details->monitor, rect.x, rect.y, rect.width, rect.height);
+    DEBUG ("NemoDesktopWindow monitor:%d: x:%d, y:%d, w:%d, h:%d",
+           window->details->monitor,
+           rect.x, rect.y,
+           rect.width, rect.height);
 
     gtk_window_move (GTK_WINDOW (window), rect.x, rect.y);
     gtk_widget_set_size_request (GTK_WIDGET (window), rect.width, rect.height);
