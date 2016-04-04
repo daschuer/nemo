@@ -1068,7 +1068,7 @@ init_icons_and_styles (void)
 static void
 init_desktop (NemoApplication *self)
 {
-    self->priv->desktop_manager = nemo_desktop_manager_new ();
+    self->priv->desktop_manager = nemo_desktop_manager_get ();
 }
 
 static gboolean 

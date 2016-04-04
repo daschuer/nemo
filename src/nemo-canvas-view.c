@@ -34,6 +34,7 @@
 #include "nemo-window.h"
 #include "nemo-desktop-window.h"
 #include "nemo-application.h"
+#include "nemo-desktop-manager.h"
 
 #include <stdlib.h>
 #include <eel/eel-vfs-extensions.h>
@@ -256,7 +257,7 @@ get_stored_icon_position_callback (NemoCanvasContainer *container,
 	g_assert (position != NULL);
 	g_assert (NEMO_IS_CANVAS_VIEW (canvas_view));
 
-	if (!nemo_canvas_view_supports_manual_layout (canvas_view)) {
+	if (!nemo_canvas_view_supports_manual_layout (canvas_view) || nemo_file_get_is_desktop_orphan (file)) {
 		return FALSE;
 	}
 
@@ -490,8 +491,22 @@ should_show_file_on_current_monitor (NemoView *view, NemoFile *file)
 	}	
 
 	gint current_monitor = nemo_desktop_utils_get_monitor_for_widget (GTK_WIDGET (view));
+    gint file_monitor = nemo_file_get_monitor_number (file);
 
-    return current_monitor == nemo_file_get_monitor_number (file);
+    NemoDesktopManager *dm = nemo_desktop_manager_get ();
+
+    if (current_monitor == file_monitor) {
+        nemo_file_set_is_desktop_orphan (file, FALSE);
+        return TRUE;
+    }
+
+    if (!nemo_desktop_manager_get_monitor_is_active (dm, file_monitor)) {
+        nemo_file_set_is_desktop_orphan (file, TRUE);
+        if (nemo_desktop_manager_get_monitor_is_primary (dm, current_monitor))
+            return TRUE;
+    }
+
+    return FALSE;
 }
 
 static void
@@ -1893,7 +1908,7 @@ icon_position_changed_callback (NemoCanvasContainer *container,
 	}
 
 	/* Store the new position of the canvas in the metadata. */
-	if (!nemo_canvas_view_using_auto_layout (canvas_view)) {
+	if (!nemo_canvas_view_using_auto_layout (canvas_view) && !nemo_file_get_is_desktop_orphan (file)) {
 		position_string = g_strdup_printf
 			("%d,%d", position->x, position->y);
 		nemo_file_set_metadata
