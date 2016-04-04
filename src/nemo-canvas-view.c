@@ -35,6 +35,7 @@
 #include "nemo-desktop-window.h"
 #include "nemo-desktop-manager.h"
 #include "nemo-application.h"
+#include "nemo-desktop-manager.h"
 
 #include <stdlib.h>
 #include <eel/eel-vfs-extensions.h>
