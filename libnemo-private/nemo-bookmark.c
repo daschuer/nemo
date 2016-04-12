@@ -331,7 +331,9 @@ nemo_bookmark_set_icon_to_default (NemoBookmark *bookmark)
 		      NULL);
 
 	g_object_unref (icon);
-	g_object_unref (symbolic_icon);
+	if (symbolic_icon) {
+		g_object_unref (symbolic_icon);
+	}
 }
 
 static gboolean
