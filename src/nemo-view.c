@@ -7592,6 +7592,7 @@ invoke_external_bulk_rename_utility (NemoView *view,
 	char *bulk_rename_tool;
 	GList *walk;
 	NemoFile *file;
+	size_t i;
 
 	/* assemble command line */
 	bulk_rename_tool = get_bulk_rename_tool ();
@@ -7607,15 +7608,6 @@ invoke_external_bulk_rename_utility (NemoView *view,
 		g_free (quoted_parameter);
 	}
 	
-	// Escape percents
-	for (int i = 0; i < strlen(cmd->str); i++) {
-		if (cmd->str[i] == '%') {
-			g_string_insert_c(cmd, i++, '%');
-		}
-	}
-
-    size_t i = 0;
-
 	// Escape percents
 	for (i = 0; i < strlen(cmd->str); i++) {
 		if (cmd->str[i] == '%') {
