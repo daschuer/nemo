@@ -7606,6 +7606,13 @@ invoke_external_bulk_rename_utility (NemoView *view,
 		cmd = g_string_append (cmd, quoted_parameter);
 		g_free (quoted_parameter);
 	}
+	
+	// Escape percents
+	for (int i = 0; i < strlen(cmd->str); i++) {
+		if (cmd->str[i] == '%') {
+			g_string_insert_c(cmd, i++, '%');
+		}
+	}
 
     size_t i = 0;
 
