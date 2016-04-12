@@ -62,6 +62,7 @@ static void        nemo_bookmark_list_save_file     (NemoBookmarkList *bookmarks
 
 G_DEFINE_TYPE(NemoBookmarkList, nemo_bookmark_list, G_TYPE_OBJECT);
 
+
 static void
 ensure_proper_file_permissions (GFile *file)
 {
@@ -82,6 +83,7 @@ ensure_proper_file_permissions (GFile *file)
     }
 #endif
 }
+
 
 static NemoBookmark *
 new_bookmark_from_uri (const char *uri, const char *label, NemoBookmarkMetadata *md)
@@ -703,6 +705,8 @@ op_processed_cb (NemoBookmarkList *self)
 	}
 }
 
+
+
 static void
 load_files_finish (GObject *source_object,
                    GAsyncResult *res,
@@ -934,42 +938,19 @@ save_files_thread (GTask        *task,
     NemoBookmarkList *bookmarks = NEMO_BOOKMARK_LIST (source_object);
 
     GFile *file;
-    GList *l;
     GString *bookmark_string;
     GFile *parent;
-    char *path;
-
-    /* temporarily disable bookmark file monitoring when writing file */
-    if (bookmarks->monitor != NULL) {
-        g_file_monitor_cancel (bookmarks->monitor);
-        bookmarks->monitor = NULL;
-    }
+    gchar *path;
+	GError *error = NULL;
 
     file = nemo_bookmark_list_get_file ();
-
-    bookmark_string = g_string_new (NULL);
-
-    for (l = bookmarks->list; l; l = l->next) {
-        NemoBookmark *bookmark;
-
-        bookmark = NEMO_BOOKMARK (l->data);
-
-        const char *label;
-        char *uri;
-        label = nemo_bookmark_get_name (bookmark);
-        uri = nemo_bookmark_get_uri (bookmark);
-        g_string_append_printf (bookmark_string,
-                    "%s %s\n", uri, label);
-        g_free (uri);
-    }
-
     parent = g_file_get_parent (file);
     path = g_file_get_path (parent);
     g_mkdir_with_parents (path, 0700);
     g_free (path);
     g_object_unref (parent);
 
-    GError *error = NULL;
+	bookmark_string = task_data;
 
     if (g_file_replace_contents (file,
                                  bookmark_string->str,

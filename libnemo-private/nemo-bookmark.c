@@ -147,23 +147,18 @@ bookmark_set_name_from_ready_file (NemoBookmark *self,
 }
 
 static void
-apply_warning_emblem (GIcon **base,
-		      gboolean symbolic)
+apply_emblem (GIcon **base, gchar *emblem_name)
 {
-	GIcon *warning, *emblemed_icon;
+	GIcon *themed_icon, *emblemed_icon;
 	GEmblem *emblem;
 
-	if (symbolic) {
-		warning = g_themed_icon_new ("dialog-warning-symbolic");
-	} else {
-		warning = g_themed_icon_new ("dialog-warning");
-	}
+	themed_icon = g_themed_icon_new (emblem_name);
 
-	emblem = g_emblem_new (warning);
+	emblem = g_emblem_new (themed_icon);
 	emblemed_icon = g_emblemed_icon_new (*base, emblem);
 
 	g_object_unref (emblem);
-	g_object_unref (warning);
+	g_object_unref (themed_icon);
 	g_object_unref (*base);
 
 	*base = emblemed_icon;
@@ -257,30 +252,75 @@ get_native_icon (NemoBookmark *bookmark,
 }
 
 static void
-nemo_bookmark_set_icon_to_default (NemoBookmark *bookmark)
+get_default_folder_icon (NemoBookmark *bookmark, 
+                         GIcon **icon, GIcon **symbolic_icon)
 {
-	GIcon *icon, *symbolic_icon;
-	char *uri;
-
 	if (g_file_is_native (bookmark->details->location)) {
-		symbolic_icon = get_native_icon (bookmark, TRUE);
-		icon = get_native_icon (bookmark, FALSE);
-		if (!bookmark->details->exists) {
-			DEBUG ("%s: file does not exist, add emblem", nemo_bookmark_get_name (bookmark));
-
-			apply_warning_emblem (&icon, FALSE);
-			apply_warning_emblem (&symbolic_icon, TRUE);
-		}
+		*symbolic_icon = get_native_icon (bookmark, TRUE);
+		*icon = get_native_icon (bookmark, FALSE);
 	} else {
-		uri = g_file_get_uri (bookmark->details->location);
+		char *uri = g_file_get_uri (bookmark->details->location);
 		if (g_str_has_prefix (uri, EEL_SEARCH_URI)) {
-			symbolic_icon = g_themed_icon_new (NEMO_ICON_SYMBOLIC_FOLDER_SAVED_SEARCH);
-			icon = g_themed_icon_new (NEMO_ICON_FULLCOLOR_FOLDER_SAVED_SEARCH);
+			*symbolic_icon = g_themed_icon_new (NEMO_ICON_SYMBOLIC_FOLDER_SAVED_SEARCH);
+			*icon = g_themed_icon_new (NEMO_ICON_FULLCOLOR_FOLDER_SAVED_SEARCH);
 		} else {
-			symbolic_icon = g_themed_icon_new (NEMO_ICON_SYMBOLIC_FOLDER_REMOTE);
-			icon = g_themed_icon_new (NEMO_ICON_FULLCOLOR_FOLDER_REMOTE);
+			*symbolic_icon = g_themed_icon_new (NEMO_ICON_SYMBOLIC_FOLDER_REMOTE);
+			*icon = g_themed_icon_new (NEMO_ICON_FULLCOLOR_FOLDER_REMOTE);
 		}
 		g_free (uri);
+	}    
+}
+
+static void
+construct_default_icon_from_metadata (NemoBookmark *bookmark, 
+                                      GIcon **icon, GIcon **symbolic_icon)
+{
+    NemoBookmarkMetadata *md = bookmark->details->metadata;
+
+    if (md->icon_name) {
+        *icon = g_themed_icon_new (md->icon_name);
+    } else if (md->icon_uri) {
+        GFile *file = g_file_new_for_uri (md->icon_uri);
+        *icon = g_file_icon_new (file);
+        g_object_unref (file);
+    } else {
+        get_default_folder_icon (bookmark, icon, symbolic_icon);
+    }
+
+    if (*icon != NULL && md->emblems != NULL) {		
+        apply_emblem(icon, md->emblems[0]);
+
+		gint i = 1;
+        while (i < g_strv_length (md->emblems)) {
+            GIcon *emb_icon = g_themed_icon_new (md->emblems[i]);
+            GEmblem *emblem = g_emblem_new (emb_icon);
+
+            g_emblemed_icon_add_emblem (G_EMBLEMED_ICON (*icon), emblem);
+
+            i++;
+        }
+    }
+}
+
+static void
+nemo_bookmark_set_icon_to_default (NemoBookmark *bookmark)
+{
+	GIcon *icon = NULL; 
+    GIcon *symbolic_icon = NULL;
+
+	if (bookmark->details->metadata != NULL) {
+		construct_default_icon_from_metadata (bookmark, &icon, &symbolic_icon);
+	}
+
+	if (!icon) {
+		get_default_folder_icon (bookmark, &icon, &symbolic_icon);
+	}
+
+	if (!bookmark->details->exists) {
+		DEBUG ("%s: file does not exist, add emblem", nemo_bookmark_get_name (bookmark));
+
+		apply_emblem (&icon, "dialog-warning");
+		apply_emblem (&symbolic_icon, "dialog-warning-symbolic");
 	}
 
 	DEBUG ("%s: setting icon to default", nemo_bookmark_get_name (bookmark));
@@ -987,10 +1027,7 @@ nemo_bookmark_get_updated_metadata (NemoBookmark  *bookmark)
 NemoBookmarkMetadata *
 nemo_bookmark_get_current_metadata (NemoBookmark *bookmark)
 {
-    if (bookmark->details->metadata)
-        return bookmark->details->metadata;
-
-    return NULL;
+	return bookmark->details->metadata;
 }
 
 NemoBookmarkMetadata *

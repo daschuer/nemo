@@ -1877,44 +1877,54 @@ nemo_window_slot_queue_reload (NemoWindowSlot *slot)
 	nemo_window_slot_force_reload (slot);
 }
 
+void
+nemo_window_slot_clear_forward_list (NemoWindowSlot *slot)
+{
+	g_assert (NEMO_IS_WINDOW_SLOT (slot));
+
+	g_list_free_full (slot->details->forward_list, g_object_unref);
+	slot->details->forward_list = NULL;
+}
+
+void
+nemo_window_slot_clear_back_list (NemoWindowSlot *slot)
+{
+	g_assert (NEMO_IS_WINDOW_SLOT (slot));
+
+	g_list_free_full (slot->details->back_list, g_object_unref);
+	slot->details->back_list = NULL;
+}
+
 static void
-set_displayed_file (NemoWindowSlot *slot, NemoFile *file)
+nemo_window_slot_update_bookmark (NemoWindowSlot *slot, NemoFile *file)
 {
         gboolean recreate;
-	GFile *new_location = NULL;
+	GFile *new_location;
 
-	if (file != NULL) {
-		new_location = nemo_file_get_location (file);
+	new_location = nemo_file_get_location (file);
+
+	if (slot->details->current_location_bookmark == NULL) {
+		recreate = TRUE;
+	} else {
+		GFile *bookmark_location;
+		bookmark_location = nemo_bookmark_get_location (slot->details->current_location_bookmark);
+		recreate = !g_file_equal (bookmark_location, new_location);
+		g_object_unref (bookmark_location);
 	}
 
-        if (slot->details->current_location_bookmark == NULL || file == NULL) {
-                recreate = TRUE;
-        } else {
-		GFile *bookmark_location;
-                bookmark_location = nemo_bookmark_get_location (slot->details->current_location_bookmark);
-                recreate = !g_file_equal (bookmark_location, new_location);
-                g_object_unref (bookmark_location);
-        }
-
-        if (recreate) {
+	if (recreate) {
 		char *display_name = NULL;
 
-                /* We've changed locations, must recreate bookmark for current location. */
+		/* We've changed locations, must recreate bookmark for current location. */
 		g_clear_object (&slot->details->last_location_bookmark);
-
-		if (file != NULL) {
-			display_name = nemo_file_get_display_name (file);
-		}
 		slot->details->last_location_bookmark = slot->details->current_location_bookmark;
-		if (new_location == NULL) {
-			slot->details->current_location_bookmark = NULL;
-		} else {
-			slot->details->current_location_bookmark = nemo_bookmark_new (new_location, display_name, NULL);
-		}
+
+		display_name = nemo_file_get_display_name (file);
+		slot->details->current_location_bookmark = nemo_bookmark_new (new_location, display_name, NULL);
 		g_free (display_name);
 	}
 
-	g_clear_object (&new_location);
+	g_object_unref (new_location);
 }
 
 static void
@@ -1946,82 +1956,48 @@ check_last_bookmark_location_matches_slot (NemoWindowSlot *slot)
 }
 
 static void
-handle_go_back (NemoWindowSlot *slot,
-		GFile *location)
+handle_go_direction (NemoWindowSlot *slot,
+		     GFile              *location,
+		     gboolean            forward)
 {
-	guint i;
-	GList *link;
+	GList **list_ptr, **other_list_ptr;
+	GList *list, *other_list, *link;
 	NemoBookmark *bookmark;
+	guint i;
 
-	/* Going back. Move items from the back list to the forward list. */
-	g_assert (g_list_length (slot->details->back_list) > slot->details->location_change_distance);
-	check_bookmark_location_matches (NEMO_BOOKMARK (g_list_nth_data (slot->details->back_list,
-									     slot->details->location_change_distance)),
+	list_ptr = (forward) ? (&slot->details->forward_list) : (&slot->details->back_list);
+	other_list_ptr = (forward) ? (&slot->details->back_list) : (&slot->details->forward_list);
+	list = *list_ptr;
+	other_list = *other_list_ptr;
+
+	/* Move items from the list to the other list. */
+	g_assert (g_list_length (list) > slot->details->location_change_distance);
+	check_bookmark_location_matches (g_list_nth_data (list, slot->details->location_change_distance),
 					 location);
 	g_assert (nemo_window_slot_get_location (slot) != NULL);
 
-	/* Move current location to Forward list */
-
+	/* Move current location to list */
 	check_last_bookmark_location_matches_slot (slot);
 
 	/* Use the first bookmark in the history list rather than creating a new one. */
-	slot->details->forward_list = g_list_prepend (slot->details->forward_list,
-						      slot->details->last_location_bookmark);
-	g_object_ref (slot->details->forward_list->data);
+	other_list = g_list_prepend (other_list, slot->details->last_location_bookmark);
+	g_object_ref (other_list->data);
 
-	/* Move extra links from Back to Forward list */
+	/* Move extra links from the list to the other list */
 	for (i = 0; i < slot->details->location_change_distance; ++i) {
-		bookmark = NEMO_BOOKMARK (slot->details->back_list->data);
-		slot->details->back_list =
-			g_list_remove (slot->details->back_list, bookmark);
-		slot->details->forward_list =
-			g_list_prepend (slot->details->forward_list, bookmark);
+		bookmark = NEMO_BOOKMARK (list->data);
+		list = g_list_remove (list, bookmark);
+		other_list = g_list_prepend (other_list, bookmark);
 	}
 
 	/* One bookmark falls out of back/forward lists and becomes viewed location */
-	link = slot->details->back_list;
-	slot->details->back_list = g_list_remove_link (slot->details->back_list, link);
+	link = list;
+	list = g_list_remove_link (list, link);
 	g_object_unref (link->data);
 	g_list_free_1 (link);
-}
 
-static void
-handle_go_forward (NemoWindowSlot *slot,
-		   GFile *location)
-{
-	guint i;
-	GList *link;
-	NemoBookmark *bookmark;
-
-	/* Going forward. Move items from the forward list to the back list. */
-	g_assert (g_list_length (slot->details->forward_list) > slot->details->location_change_distance);
-	check_bookmark_location_matches (NEMO_BOOKMARK (g_list_nth_data (slot->details->forward_list,
-									     slot->details->location_change_distance)),
-					 location);
-	g_assert (nemo_window_slot_get_location (slot) != NULL);
-
-	/* Move current location to Back list */
-	check_last_bookmark_location_matches_slot (slot);
-
-	/* Use the first bookmark in the history list rather than creating a new one. */
-	slot->details->back_list = g_list_prepend (slot->details->back_list,
-						   slot->details->last_location_bookmark);
-	g_object_ref (slot->details->back_list->data);
-
-	/* Move extra links from Forward to Back list */
-	for (i = 0; i < slot->details->location_change_distance; ++i) {
-		bookmark = NEMO_BOOKMARK (slot->details->forward_list->data);
-		slot->details->forward_list =
-			g_list_remove (slot->details->back_list, bookmark);
-		slot->details->back_list =
-			g_list_prepend (slot->details->forward_list, bookmark);
-	}
-
-	/* One bookmark falls out of back/forward lists and becomes viewed location */
-	link = slot->details->forward_list;
-	slot->details->forward_list = g_list_remove_link (slot->details->forward_list, link);
-	g_object_unref (link->data);
-	g_list_free_1 (link);
+	*list_ptr = list;
+	*other_list_ptr = other_list;
 }
 
 static void
@@ -2055,21 +2031,22 @@ update_history (NemoWindowSlot *slot,
                 NemoLocationChangeType type,
                 GFile *new_location)
 {
-        switch (type) {
-        case NEMO_LOCATION_CHANGE_STANDARD:
+	switch (type) {
+	case NEMO_LOCATION_CHANGE_STANDARD:
 		handle_go_elsewhere (slot, new_location);
-                return;
-        case NEMO_LOCATION_CHANGE_RELOAD:
-                /* for reload there is no work to do */
-                return;
-        case NEMO_LOCATION_CHANGE_BACK:
-                handle_go_back (slot, new_location);
-                return;
-        case NEMO_LOCATION_CHANGE_FORWARD:
-                handle_go_forward (slot, new_location);
-                return;
-        }
-	g_return_if_fail (FALSE);
+		return;
+	case NEMO_LOCATION_CHANGE_RELOAD:
+		/* for reload there is no work to do */
+		return;
+	case NEMO_LOCATION_CHANGE_BACK:
+		handle_go_direction (slot, new_location, FALSE);
+		return;
+	case NEMO_LOCATION_CHANGE_FORWARD:
+		handle_go_direction (slot, new_location, TRUE);
+		return;
+	default:
+		g_return_if_fail (FALSE);
+	}
 }
 
 typedef struct {
@@ -2230,7 +2207,7 @@ nemo_window_slot_update_for_new_location (NemoWindowSlot *slot)
 	g_clear_object (&slot->details->pending_location);
 
 	file = nemo_file_get (new_location);
-	set_displayed_file (slot, file);
+	nemo_window_slot_update_bookmark (slot, file);
 
 	update_history (slot, slot->details->location_change_type, new_location);
 	old_location = nemo_window_slot_get_location (slot);
@@ -3015,24 +2992,6 @@ nemo_window_slot_go_up (NemoWindowSlot *slot,
 
 	nemo_window_slot_open_location (slot, parent, flags);
 	g_object_unref (parent);
-}
-
-void
-nemo_window_slot_clear_forward_list (NemoWindowSlot *slot)
-{
-	g_assert (NEMO_IS_WINDOW_SLOT (slot));
-
-	g_list_free_full (slot->details->forward_list, g_object_unref);
-	slot->details->forward_list = NULL;
-}
-
-void
-nemo_window_slot_clear_back_list (NemoWindowSlot *slot)
-{
-	g_assert (NEMO_IS_WINDOW_SLOT (slot));
-
-	g_list_free_full (slot->details->back_list, g_object_unref);
-	slot->details->back_list = NULL;
 }
 
 NemoFile *
