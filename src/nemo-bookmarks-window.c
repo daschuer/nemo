@@ -514,7 +514,7 @@ update_bookmark_from_text (NemoBookmarksWindow *self)
 		(gtk_entry_get_text (GTK_ENTRY (self->priv->uri_field)));
 
 	bookmark = nemo_bookmark_new (location,
-					  gtk_entry_get_text (GTK_ENTRY (self->priv->name_field)));
+					  gtk_entry_get_text (GTK_ENTRY (self->priv->name_field)), NULL);
 
 	g_object_unref (location);
 

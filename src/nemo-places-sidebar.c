@@ -610,8 +610,10 @@ static GIcon *
 get_gicon (const gchar *uri)
 {
     NemoFile *file = nemo_file_get_by_uri (uri);
-
-    return nemo_file_get_gicon (file, NEMO_FILE_ICON_FLAGS_NONE);
+	NemoFileIconFlags flags =
+		NEMO_FILE_ICON_FLAGS_USE_EMBLEMS |
+		NEMO_FILE_ICON_FLAGS_USE_ONE_EMBLEM;
+    return nemo_file_get_gicon (file, flags);
 }
 
 static void
@@ -1782,7 +1784,7 @@ bookmarks_drop_uris (NemoPlacesSidebar *sidebar,
         	increment_bookmark_breakpoint (sidebar);
 		}
 
-		bookmark = nemo_bookmark_new (location, NULL);
+		bookmark = nemo_bookmark_new (location, NULL, NULL);
         nemo_bookmark_list_append (sidebar->bookmarks, bookmark);
 
 		g_object_unref (location);
@@ -2592,7 +2594,7 @@ add_bookmark (NemoPlacesSidebar *sidebar)
 		}
 
 		location = g_file_new_for_uri (uri);
-		bookmark = nemo_bookmark_new (location, name);
+		bookmark = nemo_bookmark_new (location, name, NULL);
 		nemo_bookmark_list_append (sidebar->bookmarks, bookmark);
 
 		g_object_unref (location);
@@ -3842,7 +3844,7 @@ bookmarks_edited (GtkCellRenderer       *cell,
 		/* In case we're renaming a built-in bookmark, and it's not in the
 		 * list, add it with a custom name.
 		 */
-		bookmark = nemo_bookmark_new (location, new_text);
+		bookmark = nemo_bookmark_new (location, new_text, NULL);
 		nemo_bookmark_list_append (sidebar->bookmarks, bookmark);
 		g_object_unref (bookmark);
 	}

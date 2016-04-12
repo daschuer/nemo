@@ -1920,7 +1920,7 @@ nemo_window_slot_update_bookmark (NemoWindowSlot *slot, NemoFile *file)
 		slot->details->last_location_bookmark = slot->details->current_location_bookmark;
 
 		display_name = nemo_file_get_display_name (file);
-		slot->details->current_location_bookmark = nemo_bookmark_new (new_location, display_name);
+		slot->details->current_location_bookmark = nemo_bookmark_new (new_location, display_name, NULL);
 		g_free (display_name);
 	}
 
