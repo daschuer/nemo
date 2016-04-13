@@ -940,17 +940,6 @@ nemo_application_handle_local_options (GApplication *application,
 	return retval;
 }
 
-gboolean 
-nemo_application_get_show_desktop (NemoApplication *self) {
-	if (self->priv->force_desktop) {
-		return TRUE;
-	} 
-	if (self->priv->no_desktop) {
-		return TRUE;
-	}
-	return g_settings_get_boolean (nemo_desktop_preferences, NEMO_PREFERENCES_SHOW_DESKTOP);
-}
-
 static void
 nemo_application_activate (GApplication *app)
 {
@@ -986,6 +975,17 @@ nemo_application_init (NemoApplication *application)
 	g_object_unref (action_quit);
 
 	g_application_add_main_option_entries (G_APPLICATION (application), options);
+}
+
+gboolean 
+nemo_application_get_show_desktop (NemoApplication *self) {
+	if (self->priv->force_desktop) {
+		return TRUE;
+	} 
+	if (self->priv->no_desktop) {
+		return FALSE;
+	}
+	return g_settings_get_boolean (nemo_desktop_preferences, NEMO_PREFERENCES_SHOW_DESKTOP);
 }
 
 static gboolean
