@@ -1,12 +1,18 @@
+nemo (2.8.7.21-daschuer) trusty; urgency=low
+  
+  * Merged with nemo 2.8.7 
+ 
+ -- Daniel Schürmann <daschuer@gmx.de>  Wed, 13 Apr 2016 20:12:13 +0000
+
 nemo (2.8.6.20-daschuer) trusty; urgency=low
   
-  * Merged with nemo 2.8.5 
+  * Merged with nemo 2.8.6 
  
  -- Daniel Schürmann <daschuer@gmx.de>  Wed, 25 Feb 2016 20:46:10 +0000
 
 nemo (2.8.6.19-daschuer) trusty; urgency=low
   
-  * Merged with nemo 2.8.5 
+  * Merged with nemo 2.8.6 
  
  -- Daniel Schürmann <daschuer@gmx.de>  Fri, 27 Nov 2015 17:27:57 +0000
 
