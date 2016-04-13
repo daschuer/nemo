@@ -286,7 +286,15 @@ nemo_desktop_window_new (gint monitor)
                            "disable-chrome", TRUE,
                            "monitor", monitor,
                            NULL);
-	return window;
+
+    /* Stop wrong desktop window size in GTK 3.20*/
+    /* We don't want to set a default size, which the parent does, since this */
+    /* will cause the desktop window to open at the wrong size in gtk 3.20 */
+#if GTK_CHECK_VERSION (3, 19, 0) 
+    gtk_window_set_default_size (GTK_WINDOW (window), -1, -1);
+#endif
+
+ 	return window;
 }
 
 static gboolean
