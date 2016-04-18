@@ -228,7 +228,7 @@ create_new_search (NemoWindowSlot *slot)
 	query = nemo_query_editor_get_query (slot->details->query_editor);
 	nemo_search_directory_set_query (NEMO_SEARCH_DIRECTORY (directory), query);
 
-	nemo_window_slot_open_location (slot, location, 0);
+	nemo_window_slot_open_location (slot, location, NEMO_WINDOW_OPEN_FLAG_SEARCH);
 
 	nemo_directory_unref (directory);
 	g_object_unref (query);
@@ -683,9 +683,9 @@ nemo_window_slot_open_location_full (NemoWindowSlot *slot,
 					 gpointer user_data)
 {
 	NemoWindow *window;
-        NemoWindow *target_window;
-        NemoWindowPane *pane;
-        NemoWindowSlot *target_slot;
+	NemoWindow *target_window;
+	NemoWindowPane *pane;
+	NemoWindowSlot *target_slot;
 	NemoWindowOpenFlags slot_flags;
 	GFile *old_location;
 	GList *old_selection;
@@ -697,7 +697,7 @@ nemo_window_slot_open_location_full (NemoWindowSlot *slot,
 
 	window = nemo_window_slot_get_window (slot);
 
-        target_window = NULL;
+	target_window = NULL;
 	target_slot = NULL;
 	use_same = TRUE;
 
@@ -733,7 +733,10 @@ nemo_window_slot_open_location_full (NemoWindowSlot *slot,
 		    (flags & NEMO_WINDOW_OPEN_FLAG_NEW_TAB) != 0));
 
 	/* and if the flags specify so, this is overridden */
-	if ((flags & NEMO_WINDOW_OPEN_FLAG_NEW_WINDOW) != 0) {
+	if ((flags & NEMO_WINDOW_OPEN_FLAG_SEARCH) != 0) {
+		use_same = TRUE;
+	}
+	else if ((flags & NEMO_WINDOW_OPEN_FLAG_NEW_WINDOW) != 0) {
 		use_same = FALSE;
 	}
 
