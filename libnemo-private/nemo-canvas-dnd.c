@@ -1091,7 +1091,6 @@ nemo_canvas_container_get_drop_action (NemoCanvasContainer *container,
 
 	/* find out if we're over an canvas */
 	canvas_widget_to_world (EEL_CANVAS (container), x, y, &world_x, &world_y);
-	*action = 0;
 
 	drop_target = nemo_canvas_container_find_drop_target (container,
 								  context, x, y, &icon_hit, FALSE);
@@ -1571,7 +1570,7 @@ drag_data_received_callback (GtkWidget *widget,
 			     guint32 time,
 			     gpointer user_data)
 {
-    	NemoDragInfo *drag_info;
+	NemoDragInfo *drag_info;
 	guchar *tmp;
 	const guchar *tmp_raw;
 	int length;
@@ -1623,6 +1622,7 @@ drag_data_received_callback (GtkWidget *widget,
 			nemo_canvas_container_receive_dropped_icons
 				(NEMO_CANVAS_CONTAINER (widget),
 				 context, x, y);
+			success = TRUE;
 			break;
 		case NEMO_ICON_DND_NETSCAPE_URL:
 			receive_dropped_netscape_url
@@ -1700,6 +1700,8 @@ drag_data_received_callback (GtkWidget *widget,
 			break;
 		}
 		gtk_drag_finish (context, success, FALSE, time);
+
+		nemo_canvas_container_free_drag_data (NEMO_CANVAS_CONTAINER (widget)->details->dnd_info);
 
 		set_drop_target (NEMO_CANVAS_CONTAINER (widget), NULL);
 
