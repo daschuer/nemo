@@ -9,6 +9,7 @@
 #include <gdk/gdkx.h>
 
 #include <libnemo-private/nemo-global-preferences.h>
+#include <libnemo-private/nemo-desktop-utils.h>
 
 G_DEFINE_TYPE (NemoDesktopManager, nemo_desktop_manager, G_TYPE_OBJECT);
 
@@ -111,9 +112,9 @@ layout_changed (NemoDesktopManager *manager)
     NemoApplication *app = NEMO_APPLICATION (g_application_get_default ());
     if (!nemo_application_get_show_desktop (app)) {
         return;
-    } else {
-    	ensure_background_window ();
     }
+
+    ensure_background_window ();
 
     gchar *pref = g_settings_get_string (nemo_desktop_preferences, NEMO_PREFERENCES_DESKTOP_LAYOUT);
 
@@ -145,7 +146,7 @@ layout_changed (NemoDesktopManager *manager)
         if (i == x_primary) {
             create_new_desktop_window (manager, i, show_desktop_on_primary, show_desktop_on_primary);
             primary_set = primary_set || show_desktop_on_primary;
-        } else {
+        } else if (!nemo_desktop_utils_get_monitor_cloned (i, x_primary)) {
             gboolean set_layout_primary = !primary_set && !show_desktop_on_primary && show_desktop_on_remaining;
             create_new_desktop_window (manager, i, set_layout_primary, show_desktop_on_remaining);
             primary_set = primary_set || set_layout_primary;
