@@ -4010,6 +4010,7 @@ nemo_places_sidebar_init (NemoPlacesSidebar *sidebar)
 	GtkCellRenderer   *cell;
 	GtkTreeSelection  *selection;
 	GIcon             *eject;
+	GtkStyleContext   *style_context;
 
     sidebar->action_manager = nemo_action_manager_new ();
 
@@ -4037,8 +4038,12 @@ nemo_places_sidebar_init (NemoPlacesSidebar *sidebar)
 	gtk_scrolled_window_set_vadjustment (GTK_SCROLLED_WINDOW (sidebar), NULL);
 	gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (sidebar), GTK_SHADOW_IN);
 
-	gtk_style_context_set_junction_sides (gtk_widget_get_style_context (GTK_WIDGET (sidebar)),
-					      GTK_JUNCTION_RIGHT | GTK_JUNCTION_LEFT);
+
+	style_context = gtk_widget_get_style_context (GTK_WIDGET (sidebar));
+	gtk_style_context_set_junction_sides (style_context, GTK_JUNCTION_RIGHT | GTK_JUNCTION_LEFT);
+
+	/* Make it easier for theme authors to style the sidebar */
+	gtk_style_context_add_class (style_context, "nemo-places-sidebar");
 
   	/* tree view */
 	tree_view = GTK_TREE_VIEW (nemo_places_tree_view_new ());

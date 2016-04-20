@@ -271,6 +271,9 @@ nemo_desktop_window_init (NemoDesktopWindow *window)
 {
 	window->details = G_TYPE_INSTANCE_GET_PRIVATE (window, NEMO_TYPE_DESKTOP_WINDOW,
 						       NemoDesktopWindowDetails);
+
+	/* Make it easier for themes authors to style the desktop window separately */
+	gtk_style_context_add_class (gtk_widget_get_style_context (GTK_WIDGET (window)), "nemo-desktop-window");
 }
 
 NemoDesktopWindow *
