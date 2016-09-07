@@ -535,15 +535,13 @@ static void
 nemo_application_open (GApplication *app,
 			   GFile **files,
 			   gint n_files,
-			   const gchar *hint)
+			   const gchar *geometry)
 {
 	NemoApplication *self = NEMO_APPLICATION (app);
 
 	DEBUG ("Open called on the GApplication instance; %d files", n_files);
 
-	open_windows (self, files, n_files,
-		      gdk_screen_get_default (),
-		      self->priv->geometry);
+	open_windows (self, files, n_files, gdk_screen_get_default (), geometry);
 }
 
 static GObject *
@@ -689,7 +687,7 @@ nemo_application_local_command_line (GApplication *application,
 	gboolean browser = FALSE;
 	gboolean kill_shell = FALSE;
 	gboolean no_default_window = FALSE;
-    gboolean fix_cache = FALSE;
+	gboolean fix_cache = FALSE;
 	gchar **remaining = NULL;
 	NemoApplication *self = NEMO_APPLICATION (application);
 
@@ -823,10 +821,9 @@ nemo_application_local_command_line (GApplication *application,
 		files[0] = g_file_new_for_path (g_get_home_dir ());
 		files[1] = NULL;
 	}
-
 	/* Invoke "Open" to create new windows */
 	if (len > 0) {
-		g_application_open (application, files, len, "");
+		g_application_open (application, files, len, self->priv->geometry);
 	}
 
 	for (idx = 0; idx < len; idx++) {
