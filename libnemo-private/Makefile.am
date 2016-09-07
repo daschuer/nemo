@@ -10,7 +10,7 @@ AM_CPPFLAGS = 						\
 	$(COMMON_CFLAGS)				\
 	$(NEMO_CFLAGS)					\
 	$(DESKTOP_CFLAGS)				\
-	$(WARNING_CFLAGS)				\
+	$(WARN_CFLAGS)				\
 	$(DISABLE_DEPRECATED_CFLAGS)			\
 	$(TRACKER_CFLAGS)				\
 	$(ZEITGEIST_CFLAGS)	\
@@ -45,6 +45,7 @@ dependency_static_libs = \
 	$(NULL)
 
 libnemo_private_la_LDFLAGS =	\
+	$(WARN_LDFLAGS)			\
 	-no-undefined			\
 	$(NULL)
 
