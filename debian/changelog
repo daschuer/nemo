@@ -1,3 +1,9 @@
+nemo (3.0.0.24-daschuer) trusty; urgency=low
+  
+  * Merged with nemo 3.0.0 
+ 
+ -- Daniel Schürmann <daschuer@gmx.de>  Wed, 07 Sep 2016 21:22:18 +0000
+
 nemo (2.8.7.23-daschuer) trusty; urgency=low
   
   * Merged with nemo 2.8.7 

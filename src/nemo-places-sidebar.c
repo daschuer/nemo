@@ -4038,7 +4038,6 @@ nemo_places_sidebar_init (NemoPlacesSidebar *sidebar)
 	gtk_scrolled_window_set_vadjustment (GTK_SCROLLED_WINDOW (sidebar), NULL);
 	gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (sidebar), GTK_SHADOW_IN);
 
-
 	style_context = gtk_widget_get_style_context (GTK_WIDGET (sidebar));
 	gtk_style_context_set_junction_sides (style_context, GTK_JUNCTION_RIGHT | GTK_JUNCTION_LEFT);
 
