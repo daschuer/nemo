@@ -27,8 +27,8 @@ Build-Depends: debhelper (>= 8),
                libgirepository1.0-dev (>= 0.9.12),
                libglib2.0-doc,
                libgtk-3-doc,
-               python-polib,
-               python-gi,
+               python3-polib,
+               python3-gi,
                libunity-dev (>= 5.0.0),
                libzeitgeist-dev
 Homepage: https://github.com/daschuer/nemo
