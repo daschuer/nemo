@@ -5166,7 +5166,7 @@ reset_move_copy_to_menu (NemoView *view)
     GtkAction *action;
 
     mount_uri = nemo_get_home_directory_uri ();
-    file = nemo_file_get_existing_by_uri (mount_uri);
+    file = nemo_file_get_by_uri (mount_uri);
     g_free (mount_uri);
 
 	NemoFileIconFlags flags =
@@ -5180,7 +5180,7 @@ reset_move_copy_to_menu (NemoView *view)
 
     g_object_unref (file);
     mount_uri = nemo_get_desktop_directory_uri ();
-    file = nemo_file_get_existing_by_uri (mount_uri);
+    file = nemo_file_get_by_uri (mount_uri);
     g_free (mount_uri);
 
     action = gtk_action_group_get_action (view->details->dir_action_group, NEMO_ACTION_COPY_TO_DESKTOP);
