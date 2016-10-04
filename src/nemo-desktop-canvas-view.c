@@ -127,7 +127,7 @@ nemo_desktop_canvas_view_dispose (GObject *object)
 	g_signal_handlers_disconnect_by_func (nemo_canvas_view_preferences,
 					      default_zoom_level_changed,
 					      canvas_view);
-	g_signal_handlers_disconnect_by_func (nemo_preferences,
+	g_signal_handlers_disconnect_by_func (nemo_desktop_preferences,
 					      font_changed_callback,
 					      canvas_view);
 	g_signal_handlers_disconnect_by_func (gnome_lockdown_preferences,

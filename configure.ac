@@ -23,7 +23,7 @@ dnl Interface break is not allowed.
 m4_define(nemo_extension_current,  5)
 m4_define(nemo_extension_revision, 0)
 
-AC_INIT(nemo, 3.0.5.28-daschuer https://github.com/daschuer/nemo)
+AC_INIT(nemo, 3.0.6.29-daschuer https://github.com/daschuer/nemo)
 
 dnl ===========================================================================
 
