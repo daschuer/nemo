@@ -47,6 +47,7 @@ get_canvas_view (NemoCanvasContainer *container)
 	return ((NemoCanvasViewContainer *)container)->view;
 }
 
+
 static NemoIconInfo *
 nemo_canvas_view_container_get_icon_images (NemoCanvasContainer *container,
 					      NemoCanvasIconData      *data,
@@ -59,7 +60,6 @@ nemo_canvas_view_container_get_icon_images (NemoCanvasContainer *container,
 {
 	NemoCanvasView *canvas_view;
 	NemoFile *file;
-	gboolean use_embedding;
 	NemoFileIconFlags flags;
 	NemoIconInfo *icon_info;
 	gint scale;
@@ -69,12 +69,6 @@ nemo_canvas_view_container_get_icon_images (NemoCanvasContainer *container,
 	g_assert (NEMO_IS_FILE (file));
 	canvas_view = get_canvas_view (container);
 	g_return_val_if_fail (canvas_view != NULL, NULL);
-
-	use_embedding = FALSE;
-	if (embedded_text) {
-		*embedded_text = nemo_file_peek_top_left_text (file, need_large_embeddded_text, embedded_text_needs_loading);
-		use_embedding = *embedded_text != NULL;
-	}
 	
 	*has_window_open = nemo_file_has_open_window (file);
 
@@ -87,9 +81,6 @@ nemo_canvas_view_container_get_icon_images (NemoCanvasContainer *container,
 		}
 	}
 
-	if (use_embedding) {
-		flags |= NEMO_FILE_ICON_FLAGS_EMBEDDING_TEXT;
-	}
 	if (for_drag_accept) {
 		flags |= NEMO_FILE_ICON_FLAGS_FOR_DRAG_ACCEPT;
 	}

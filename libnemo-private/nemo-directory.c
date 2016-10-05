@@ -206,7 +206,6 @@ nemo_directory_finalize (GObject *object)
 
 	nemo_directory_cancel (directory);
 	g_assert (directory->details->count_in_progress == NULL);
-	g_assert (directory->details->top_left_read_state == NULL);
 
 	if (directory->details->monitor_list != NULL) {
 		g_warning ("destroying a NemoDirectory while it's being monitored");
@@ -1118,7 +1117,6 @@ nemo_directory_notify_files_changed (GList *files)
 			 * a changed signal.
 			 */
 			file->details->file_info_is_up_to_date = FALSE;
-			file->details->top_left_text_is_up_to_date = FALSE;
 			file->details->link_info_is_up_to_date = FALSE;
 			nemo_file_invalidate_extension_info_internal (file);
 
