@@ -674,6 +674,8 @@ nemo_application_finalize (GObject *object)
 	g_clear_object (&application->priv->progress_handler);
 	g_clear_object (&application->priv->bookmark_list);
 
+	g_free (application->priv->geometry);
+
 	g_clear_object (&application->priv->dbus_manager);
 	g_clear_object (&application->priv->fdb_manager);
 	g_clear_object (&application->priv->search_provider);
@@ -703,7 +705,6 @@ do_cmdline_sanity_checks (NemoApplication *self,
 			    _("--quit cannot be used with URIs."));
 		goto out;
 	}
-
 
 	if (g_variant_dict_contains (options, "select") &&
 	    !g_variant_dict_contains (options, G_OPTION_REMAINING)) {
@@ -966,6 +967,8 @@ nemo_application_handle_local_options (GApplication *application,
 		retval = EXIT_SUCCESS;
 		goto out;
 	}
+
+	g_variant_dict_lookup (options, "geometry", "s", &self->priv->geometry);
 
 	retval = nemo_application_handle_file_args (self, options);
 
