@@ -97,6 +97,10 @@
 #include <libcinnamon-desktop/gnome-desktop-thumbnail.h>
 #endif
 
+/* Keep window from shrinking down ridiculously small; numbers are somewhat arbitrary */
+#define APPLICATION_WINDOW_MIN_WIDTH	300
+#define APPLICATION_WINDOW_MIN_HEIGHT	100
+
 #define NEMO_ACCEL_MAP_SAVE_DELAY 30
 
 /* The saving of the accelerator map was requested  */
@@ -112,6 +116,7 @@ struct _NemoApplicationPriv {
 
 	gboolean no_desktop;
 	gboolean force_desktop;
+	gchar *geometry;
 
     gboolean cache_problem;
     gboolean ignore_cache_problem;
@@ -414,7 +419,7 @@ get_window_slot_for_location (NemoApplication *application, GFile *location)
 
 static void
 open_window (NemoApplication *application,
-	     GFile *location)
+	     GFile *location, const char *geometry)
 {
 	NemoWindow *window;
 
@@ -425,6 +430,18 @@ open_window (NemoApplication *application,
 		nemo_window_go_to (window, location);
 	} else {
 		nemo_window_slot_go_home (nemo_window_get_active_slot (window), 0);
+	}
+
+	if (geometry != NULL && !gtk_widget_get_visible (GTK_WIDGET (window))) {
+		/* never maximize windows opened from shell if a
+		 * custom geometry has been requested.
+		 */
+		gtk_window_unmaximize (GTK_WINDOW (window));
+		eel_gtk_window_set_initial_geometry_from_string (GTK_WINDOW (window),
+								 geometry,
+								 APPLICATION_WINDOW_MIN_WIDTH,
+								 APPLICATION_WINDOW_MIN_HEIGHT,
+								 FALSE);
 	}
 
 	nemo_profile_end (NULL);
@@ -491,7 +508,7 @@ nemo_application_open (GApplication *app,
 		}
 
 		if (!slot) {
-			open_window (self, file);
+			open_window (self, file, self->priv->geometry);
 		} else {
 			/* We open the location again to update any possible selection */
 			nemo_window_slot_open_location (slot, file, 0);
@@ -639,6 +656,8 @@ nemo_application_finalize (GObject *object)
 	g_clear_object (&application->priv->progress_handler);
 	g_clear_object (&application->priv->bookmark_list);
 
+	g_free (application->priv->geometry);
+
 	g_clear_object (&application->priv->dbus_manager);
 	g_clear_object (&application->priv->fdb_manager);
 	g_clear_object (&application->priv->search_provider);
@@ -668,7 +687,6 @@ do_cmdline_sanity_checks (NemoApplication *self,
 			    _("--quit cannot be used with URIs."));
 		goto out;
 	}
-
 
 	if (g_variant_dict_contains (options, "select") &&
 	    !g_variant_dict_contains (options, G_OPTION_REMAINING)) {
@@ -790,11 +808,10 @@ const GOptionEntry options[] = {
 	/* dummy, only for compatibility reasons */
 	{ "browser", '\0', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, NULL,
 	  NULL, NULL },
-	/* ditto */
-	{ "geometry", 'g', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, NULL,
-	  N_("Create the initial window with the given geometry."), N_("GEOMETRY") },
 	{ "version", '\0', 0, G_OPTION_ARG_NONE, NULL,
 	  N_("Show the version of the program."), NULL },
+	{ "geometry", 'g', 0, G_OPTION_ARG_STRING, NULL,
+	  N_("Create the initial window with the given geometry e.g.: 1454x782+51+206"), N_("GEOMETRY") },
 	{ "new-window", 'w', 0, G_OPTION_ARG_NONE, NULL,
 	  N_("Always open a new window for browsing specified URIs"), NULL },
 	{ "no-default-window", 'n', 0, G_OPTION_ARG_NONE, NULL,
@@ -932,6 +949,8 @@ nemo_application_handle_local_options (GApplication *application,
 		retval = EXIT_SUCCESS;
 		goto out;
 	}
+
+	g_variant_dict_lookup (options, "geometry", "s", &self->priv->geometry);
 
 	retval = nemo_application_handle_file_args (self, options);
 
