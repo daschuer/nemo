@@ -408,11 +408,7 @@ nemo_icon_info_lookup (GIcon *icon,
 
 		filename = gtk_icon_info_get_filename (gtkicon_info);
 		if (filename == NULL) {
-#if GTK_CHECK_VERSION(3,8,0)
 			g_object_unref (gtkicon_info);
-#else 
-			gtk_icon_info_free (gtkicon_info);
-#endif
 			return nemo_icon_info_new_for_pixbuf (NULL, scale);
 		}
 
@@ -421,11 +417,7 @@ nemo_icon_info_lookup (GIcon *icon,
 
 		icon_info = g_hash_table_lookup (themed_icon_cache, &lookup_key);
 		if (icon_info) {
-#if GTK_CHECK_VERSION(3,8,0)
 			g_object_unref (gtkicon_info);
-#else 
-			gtk_icon_info_free (gtkicon_info);
-#endif 
 			return g_object_ref (icon_info);
 		}
 		
