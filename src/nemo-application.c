@@ -491,7 +491,21 @@ nemo_application_open (GApplication *app,
 			   const gchar *hint)
 {
 	NemoApplication *self = NEMO_APPLICATION (app);
-	gboolean force_new = (g_strcmp0 (hint, "new-window") == 0);
+
+	int i = 0;
+	gboolean force_new = FALSE;
+	gchar *geometry = NULL;
+	gchar **hints = g_strsplit (hint, " ", 2);
+	while (hints[i]) {
+		if (g_strcmp0 (hints[i], "new-window") == 0) {
+			force_new = TRUE;
+		}
+		if (g_strrstr (hints[i], "geometry=")) {
+			geometry = &(hints[i][sizeof("geometry=") - 1]);
+		}
+		++i;
+	}
+
 	NemoWindowSlot *slot = NULL;
 	NemoWindow *window;
 	GFile *file;
@@ -508,7 +522,7 @@ nemo_application_open (GApplication *app,
 		}
 
 		if (!slot) {
-			open_window (self, file, self->priv->geometry);
+			open_window (self, file, geometry);
 		} else {
 			/* We open the location again to update any possible selection */
 			nemo_window_slot_open_location (slot, file, 0);
@@ -518,6 +532,7 @@ nemo_application_open (GApplication *app,
 			gtk_window_present (GTK_WINDOW (window));
 		}
 	}
+	g_strfreev(hints);
 }
 
 static GtkWindow *
@@ -842,6 +857,7 @@ nemo_application_handle_file_args (NemoApplication *self,
 	gint idx, len;
 	const gchar * const *remaining = NULL;
 	GPtrArray *file_array;
+	gboolean new_window = FALSE;
 
 	g_variant_dict_lookup (options, G_OPTION_REMAINING, "^a&s", &remaining);
 
@@ -853,9 +869,10 @@ nemo_application_handle_file_args (NemoApplication *self,
 			file = g_file_new_for_commandline_arg (remaining[idx]);
 			g_ptr_array_add (file_array, file);
 		}
-	} else if (g_variant_dict_contains (options, "new-window")) {
+	} else if (g_variant_dict_contains (options, "new-window") || self->priv->geometry) {
 		file = g_file_new_for_path (g_get_home_dir ());
 		g_ptr_array_add (file_array, file);
+		new_window = TRUE;
 	} else {
 		/* No options or options that glib already manages */
 		return -1;
@@ -868,8 +885,15 @@ nemo_application_handle_file_args (NemoApplication *self,
 		nemo_application_select (self, files, len);
 	} else {
 		/* Invoke "Open" to create new windows */
-		g_application_open (G_APPLICATION (self), files, len,
-				    g_variant_dict_contains (options, "new-window") ? "new-window" : "");
+		gchar *hint;
+		if (new_window) {
+			hint = g_strdup_printf("new-window geometry=%s", self->priv->geometry);
+		} else {
+			hint = g_strdup_printf("geometry=%s", self->priv->geometry);
+		}
+
+		g_application_open (G_APPLICATION (self), files, len, hint);
+		g_free (hint);
 	}
 
 	g_ptr_array_unref (file_array);
