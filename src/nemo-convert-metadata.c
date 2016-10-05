@@ -303,10 +303,6 @@ main (int argc, char *argv[])
 	GError *error = NULL;
 	int i;
 
-#if !GLIB_CHECK_VERSION (2, 35, 1)
-       g_type_init ();
-#endif
-
 	context = g_option_context_new ("<nemo metadata files> - convert nemo metadata");
 	g_option_context_add_main_entries (context, entries, NULL);
 	if (!g_option_context_parse (context, &argc, &argv, &error)) {
