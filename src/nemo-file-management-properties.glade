@@ -253,15 +253,11 @@
     <property name="window_position">center</property>
     <property name="default_width">800</property>
     <property name="default_height">600</property>
-    <style>
-      <class name="nemo-properties-dialog"/>
-    </style>
     <property name="type_hint">dialog</property>
     <property name="title" translatable="yes">Files Preferences</property>
     <child internal-child="vbox">
       <object class="GtkBox" id="dialog-vbox1">
         <property name="visible">True</property>
-        <property name="border_width">0</property>
         <property name="can_focus">False</property>
         <property name="orientation">vertical</property>
         <property name="spacing">2</property>
