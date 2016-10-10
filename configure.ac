@@ -30,7 +30,7 @@ AC_CONFIG_SRCDIR(src)
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_MACRO_DIR([m4])
 AC_SUBST([ACLOCAL_AMFLAGS], ["-I $ac_macro_dir \${ACLOCAL_FLAGS}"])
-AX_IS_RELEASE([always])
+AX_IS_RELEASE([git-directory])
 
 AM_INIT_AUTOMAKE([foreign 1.11 dist-xz no-dist-gzip tar-ustar])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -253,7 +253,13 @@ fi
 
 dnl ==========================================================================
 
-AX_COMPILER_FLAGS([WARN_CFLAGS],[WARN_LDFLAGS])
+extra_warn_flags="\
+	-Werror=unused-function\
+	-Werror=unused-variable\
+	-Wno-declaration-after-statement\
+	"
+
+AX_COMPILER_FLAGS([WARN_CFLAGS],[WARN_LDFLAGS],[$ax_is_release],[],[$extra_warn_flags])
 
 dnl ===========================================================================
 dnl Check for Tracker
@@ -334,7 +340,7 @@ AC_ARG_ENABLE(update-mimedb,
     enable_update_mimedb=yes)
 AM_CONDITIONAL(ENABLE_UPDATE_MIMEDB, test x$enable_update_mimedb = xyes)
 
-CFLAGS="$CFLAGS -Werror=unused-function -Werror=unused-variable -O3"
+CFLAGS="$CFLAGS -O3"
 
 AC_CONFIG_FILES([
 Makefile
