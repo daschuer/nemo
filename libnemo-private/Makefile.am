@@ -10,7 +10,7 @@ AM_CPPFLAGS = 						\
 	$(NEMO_CFLAGS)					\
 	$(DESKTOP_CFLAGS)				\
 	$(WARN_CFLAGS)				\
-	$(DISABLE_DEPRECATED_CFLAGS)			\
+	$(DISABLE_DEPRECATED_CFLAGS)				\
 	$(TRACKER_CFLAGS)				\
 	$(ZEITGEIST_CFLAGS)	\
 	-DDATADIR=\""$(datadir)"\" 			\
