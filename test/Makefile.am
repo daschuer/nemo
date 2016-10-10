@@ -5,7 +5,7 @@ AM_CPPFLAGS =\
 	$(BASE_CFLAGS) \
 	$(COMMON_CFLAGS) \
 	$(NEMO_CFLAGS) \
-	$(WARNING_CFLAGS) \
+	$(WARN_CFLAGS) \
 	$(ZEITGEIST_CFLAGS) \
 	-DVERSION="\"$(VERSION)\"" \
 	-DNEMO_DATADIR=\""$(datadir)/nemo"\" \

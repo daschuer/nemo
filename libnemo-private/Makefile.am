@@ -9,8 +9,8 @@ AM_CPPFLAGS = 						\
 	$(COMMON_CFLAGS)				\
 	$(NEMO_CFLAGS)					\
 	$(DESKTOP_CFLAGS)				\
-	$(WARNING_CFLAGS)				\
-	$(DISABLE_DEPRECATED)				\
+	$(WARN_CFLAGS)				\
+	$(DISABLE_DEPRECATED_CFLAGS)				\
 	$(TRACKER_CFLAGS)				\
 	$(ZEITGEIST_CFLAGS)	\
 	-DDATADIR=\""$(datadir)"\" 			\
@@ -26,6 +26,7 @@ nemo_tracker_engine_sources = \
 endif
 
 libnemo_private_la_LDFLAGS =	\
+	$(WARN_LDFLAGS)			\
 	-no-undefined			\
 	$(NULL)
 
