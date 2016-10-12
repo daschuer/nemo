@@ -151,6 +151,11 @@ nemo_desktop_canvas_view_class_init (NemoDesktopCanvasViewClass *class)
 	vclass->update_menus = real_update_menus;
 	vclass->get_view_id = real_get_id;
 
+#if GTK_CHECK_VERSION(3, 21, 0)
+	GtkWidgetClass *wclass = GTK_WIDGET_CLASS (class);
+	gtk_widget_class_set_css_name (wclass, "nemo-desktop-icon-view");
+#endif
+
 	g_type_class_add_private (class, sizeof (NemoDesktopCanvasViewDetails));
 }
 
