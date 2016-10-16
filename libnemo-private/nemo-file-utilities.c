@@ -714,6 +714,7 @@ special_directory_get_icon (GUserDirectory directory,
 
 	switch (directory) {
 
+		ICON_CASE (DESKTOP);
 		ICON_CASE (DOCUMENTS);
 		ICON_CASE (DOWNLOAD);
 		ICON_CASE (MUSIC);
@@ -722,6 +723,7 @@ special_directory_get_icon (GUserDirectory directory,
 		ICON_CASE (TEMPLATES);
 		ICON_CASE (VIDEOS);
 
+	case G_USER_N_DIRECTORIES:
 	default:
 		return (symbolic) ? g_themed_icon_new (NEMO_ICON_SYMBOLIC_FOLDER) : g_themed_icon_new (NEMO_ICON_FULLCOLOR_FOLDER);
 	}

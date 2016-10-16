@@ -153,7 +153,7 @@ detect_extensions (NemoExtensionConfigWidget *widget)
 
 	    g_free (out);
 
-	    int i;
+	    guint i;
 	    for (i = 0; i < g_strv_length (lines); i++) {
 		if (g_str_has_prefix (lines[i], LINE_PREFIX)) {
 		    ExtensionProxy *p = g_slice_new0 (ExtensionProxy);

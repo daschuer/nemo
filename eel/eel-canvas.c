@@ -4094,6 +4094,12 @@ eel_canvas_item_accessible_ref_state_set (AtkObject *accessible)
         return state_set;
 }
 
+G_DEFINE_TYPE_WITH_CODE (EelCanvasItemAccessible,
+			 eel_canvas_item_accessible,
+			 ATK_TYPE_GOBJECT_ACCESSIBLE,
+			 G_IMPLEMENT_INTERFACE (ATK_TYPE_COMPONENT,
+						eel_canvas_item_accessible_component_interface_init));
+
 static void
 eel_canvas_item_accessible_class_init (EelCanvasItemAccessibleClass *klass)
 {
@@ -4110,12 +4116,6 @@ eel_canvas_item_accessible_init (EelCanvasItemAccessible *self)
 {
 
 }
-
-G_DEFINE_TYPE_WITH_CODE (EelCanvasItemAccessible,
-			 eel_canvas_item_accessible,
-			 ATK_TYPE_GOBJECT_ACCESSIBLE,
-			 G_IMPLEMENT_INTERFACE (ATK_TYPE_COMPONENT,
-						eel_canvas_item_accessible_component_interface_init));
 
 static GType eel_canvas_item_accessible_factory_get_type (void);
 

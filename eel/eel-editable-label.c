@@ -3370,7 +3370,7 @@ typedef struct {
   GailTextUtil *textutil;
   gint         selection_anchor;
   gint         selection_end;
-  gchar        *signal_name;
+  const gchar  *signal_name;
   gint         position;
   gint         length;
 } EelEditableLabelAccessiblePrivate;

@@ -9254,7 +9254,7 @@ nemo_canvas_container_accessible_get_n_children (AtkObject *accessible)
 }
 
 static AtkObject* 
-nemo_canvas_container_accessible_ref_child (AtkObject *accessible, int i)
+nemo_canvas_container_accessible_ref_child (AtkObject *accessible, gint i)
 {
         AtkObject *atk_object;
         NemoCanvasContainer *container;

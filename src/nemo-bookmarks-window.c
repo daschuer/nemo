@@ -136,7 +136,7 @@ nemo_bookmarks_window_key_press_event_cb (GtkWindow *window,
 					      GdkEventKey *event, 
 					      gpointer user_data)
 {
-	if (event->state & GDK_CONTROL_MASK && event->keyval == GDK_KEY_w) {
+	if ((event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_w) {
 		gtk_widget_destroy (GTK_WIDGET (window));
 		return TRUE;
 	}

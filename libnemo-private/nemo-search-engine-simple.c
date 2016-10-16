@@ -419,6 +419,9 @@ nemo_search_engine_simple_get_property (GObject *object,
 	case PROP_RECURSIVE:
 		g_value_set_boolean (value, engine->details->recursive);
 		break;
+	default:
+		g_assert_not_reached ();
+		break;
 	}
 }
 

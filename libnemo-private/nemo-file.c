@@ -4288,7 +4288,7 @@ clean_up_metadata_keywords (NemoFile *file,
 {
 	NemoFile *parent_file;
 	GList *l, *res = NULL;
-	char *exclude[4];
+	const char *exclude[4];
 	char *keyword;
 	gboolean found;
 	gint i;
@@ -4432,7 +4432,7 @@ apply_emblems_to_icon (NemoFile *file,
 			continue;
 		}
 
-        if (flags & NEMO_FILE_ICON_FLAGS_USE_ONE_EMBLEM &&
+        if ((flags & NEMO_FILE_ICON_FLAGS_USE_ONE_EMBLEM) &&
         		!nemo_icon_theme_can_render (G_THEMED_ICON (emblem_icon))) {
         	continue;
         }
@@ -6218,7 +6218,7 @@ nemo_file_get_owner_as_string (NemoFile *file, gboolean include_real_name)
 	}
 
 	if (include_real_name &&
-	    file->details->uid == getuid ()) {
+	    file->details->uid == (int) getuid ()) {
 		/* Translators: "Me" is used to indicate the file is owned by me (the current user) */
 		user_name = g_strdup (_("Me"));
 	} else if (file->details->owner_real == NULL) {

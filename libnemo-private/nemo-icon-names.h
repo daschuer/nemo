@@ -44,6 +44,7 @@
 #define NEMO_ICON_FULLCOLOR_FOLDER_TEMPLATES    "folder-templates"
 #define NEMO_ICON_FULLCOLOR_FOLDER_VIDEOS       "folder-videos"
 #define NEMO_ICON_FULLCOLOR_FOLDER_SAVED_SEARCH "folder-saved-search"
+#define NEMO_ICON_FULLCOLOR_FOLDER_DESKTOP      "user-desktop"
 
 /* Symbolic icons */
 #define NEMO_ICON_SYMBOLIC_FOLDER              "folder-symbolic"
@@ -56,6 +57,7 @@
 #define NEMO_ICON_SYMBOLIC_FOLDER_TEMPLATES    "folder-templates-symbolic"
 #define NEMO_ICON_SYMBOLIC_FOLDER_VIDEOS       "folder-videos-symbolic"
 #define NEMO_ICON_SYMBOLIC_FOLDER_SAVED_SEARCH "folder-saved-search-symbolic"
+#define NEMO_ICON_SYMBOLIC_FOLDER_DESKTOP      "user-desktop-symbolic"
 
 /* Other icons */
 #define NEMO_ICON_TEMPLATE		"text-x-generic-template"

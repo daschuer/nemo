@@ -58,13 +58,13 @@ enum {
 };
 
 static const GtkTargetEntry drag_types [] = {
-	{ NEMO_DND_URI_LIST_TYPE,   0, NEMO_DND_URI_LIST },
-	{ NEMO_DND_TEXT_PLAIN_TYPE, 0, NEMO_DND_TEXT_PLAIN },
+	{ (gchar *) NEMO_DND_URI_LIST_TYPE,   0, NEMO_DND_URI_LIST },
+	{ (gchar *) NEMO_DND_TEXT_PLAIN_TYPE, 0, NEMO_DND_TEXT_PLAIN },
 };
 
 static const GtkTargetEntry drop_types [] = {
-	{ NEMO_DND_URI_LIST_TYPE,   0, NEMO_DND_URI_LIST },
-	{ NEMO_DND_TEXT_PLAIN_TYPE, 0, NEMO_DND_TEXT_PLAIN },
+	{ (gchar *) NEMO_DND_URI_LIST_TYPE,   0, NEMO_DND_URI_LIST },
+	{ (gchar *) NEMO_DND_TEXT_PLAIN_TYPE, 0, NEMO_DND_TEXT_PLAIN },
 };
 
 struct NemoLocationEntryDetails {
