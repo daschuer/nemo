@@ -201,8 +201,8 @@ enum {
 };
 
 static const GtkTargetEntry target_table[] = {
-	{ "text/uri-list",  0, TARGET_URI_LIST },
-	{ "x-special/gnome-icon-list",  0, TARGET_GNOME_URI_LIST },
+	{ (gchar *) "text/uri-list",  0, TARGET_URI_LIST },
+	{ (gchar *) "x-special/gnome-icon-list",  0, TARGET_GNOME_URI_LIST },
 };
 
 #define DIRECTORY_CONTENTS_UPDATE_INTERVAL	200 /* milliseconds */
@@ -3968,7 +3968,7 @@ permission_combo_update (NemoPropertiesWindow *window,
 			int current_perm;
 			gtk_tree_model_get (model, &iter, 1, &current_perm, -1);
 
-			if (current_perm == all_perm) {
+			if (current_perm == (int) all_perm) {
 				found = TRUE;
 				break;
 			}

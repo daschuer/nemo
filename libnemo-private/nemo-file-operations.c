@@ -65,6 +65,7 @@
 #include "nemo-file-undo-operations.h"
 #include "nemo-file-undo-manager.h"
 #include "nemo-job-queue.h"
+#include "nemo-warnings.h"
 
 #ifdef BUILD_ZEITGEIST
 #include <zeitgeist.h>
@@ -81,8 +82,7 @@ typedef enum {
     OP_KIND_DUPE,
     OP_KIND_PERMISSIONS,
     OP_KIND_LINK,
-    OP_KIND_CREATE,
-    OP_KIND_TRUST
+    OP_KIND_CREATE
 } OpKind;
 
 typedef struct {
@@ -461,7 +461,7 @@ shorten_utf8_string (const char *base, int reduce_by_num_bytes)
 /* Note that we have these two separate functions with separate format
  * strings for ease of localization.
  */
-
+NEMO_GNUC_BEGIN_IGNORE_FORMAT_NOLIITERAL
 static char *
 get_link_name (const char *name, int count, int max_length)
 {
@@ -547,13 +547,14 @@ get_link_name (const char *name, int count, int max_length)
 			else
 				result = g_strdup_printf (format, new_name);
 
-			g_assert (strlen (result) <= max_length);
+			g_assert (strlen (result) <= (size_t) max_length);
 			g_free (new_name);
 		}
 	}
 
 	return result;
 }
+NEMO_GNUC_END_IGNORE_FORMAT_NOLIITERAL
 
 
 /* Localizers: 
@@ -746,6 +747,7 @@ parse_previous_duplicate_name (const char *name,
 	}
 }
 
+NEMO_GNUC_BEGIN_IGNORE_FORMAT_NOLIITERAL
 static char *
 make_next_duplicate_name (const char *base, const char *suffix, int count, int max_length)
 {
@@ -841,13 +843,14 @@ make_next_duplicate_name (const char *base, const char *suffix, int count, int m
 			else
 				result = g_strdup_printf (format, new_base, suffix);
 
-			g_assert (strlen (result) <= max_length);
+			g_assert (strlen (result) <= (size_t) max_length);
 			g_free (new_base);
 		}
 	}
 
 	return result;
 }
+NEMO_GNUC_END_IGNORE_FORMAT_NOLIITERAL
 
 static char *
 get_duplicate_name (const char *name, int count_increment, int max_length)
@@ -1155,7 +1158,9 @@ generate_initial_job_details (NemoProgressInfo *info,
                             g_list_length (files)),
                             src_name, dest_name);
             break;
+        case OP_KIND_CREATE:
         default:
+        	g_assert_not_reached ();
             break;
     }
     g_free (dest_name);
@@ -1983,7 +1988,7 @@ delete_file (CommonJob *job, GFile *file,
 }
 
 static void
-delete_files (CommonJob *job, GList *files, int *files_skipped)
+delete_files (CommonJob *job, GList *files, guint *files_skipped)
 {
 	GList *l;
 	GFile *file;
@@ -2050,7 +2055,7 @@ report_trash_progress (CommonJob *job,
 
 
 static void
-trash_files (CommonJob *job, GList *files, int *files_skipped)
+trash_files (CommonJob *job, GList *files, guint *files_skipped)
 {
 	GList *l;
 	GFile *file;
@@ -2210,7 +2215,7 @@ delete_job (GIOSchedulerJob *io_job,
 	CommonJob *common;
 	gboolean must_confirm_delete_in_trash;
 	gboolean must_confirm_delete;
-	int files_skipped;
+	guint files_skipped;
 
 	common = (CommonJob *)job;
 	common->io_job = io_job;
@@ -2756,7 +2761,7 @@ report_count_progress (CommonJob *job,
 {
 	char *s;
 
-	switch (source_info->op) {
+	switch ((int) source_info->op) {
 	default:
 	case OP_KIND_COPY:
 		s = f (ngettext("Preparing to copy %'d file (%S)",
@@ -2806,7 +2811,14 @@ static char *
 get_scan_primary (OpKind kind)
 {
 	switch (kind) {
+	case OP_KIND_DUPE:
+	case OP_KIND_PERMISSIONS:
+	case OP_KIND_LINK:
+	case OP_KIND_EMPTY_TRASH:
+	case OP_KIND_CREATE:
 	default:
+		g_assert_not_reached ();
+		/* fall through */
 	case OP_KIND_COPY:
 		return f (_("Error while copying."));
 	case OP_KIND_MOVE:
@@ -3174,7 +3186,7 @@ verify_destination (CommonJob *job,
 		free_size = g_file_info_get_attribute_uint64 (fsinfo,
 							      G_FILE_ATTRIBUTE_FILESYSTEM_FREE);
 		
-		if (free_size < required_size) {
+		if (free_size < (guint64) required_size) {
 			size_difference = required_size - free_size;
 			primary = f (_("Error while copying to “%B”."), dest);
 			secondary = f (_("There is not enough space on the destination. Try to remove files to make space."));
@@ -3420,7 +3432,7 @@ make_file_name_valid_for_dest_fs (char *filename,
 		    !strcmp (dest_fs_type, "msdos") ||
 		    !strcmp (dest_fs_type, "msdosfs")) {
 			gboolean ret;
-			int i, old_len;
+			size_t i, old_len;
 
 			ret = fat_str_replace (filename, '_');
 
@@ -4570,8 +4582,8 @@ copy_move_file (CopyMoveJob *copy_job,
 	/* Conflict */
 	if (!overwrite &&
 	    IS_IO_ERROR (error, EXISTS)) {
-		gboolean is_merge;
-		ConflictResponseData *response;
+		gboolean is_merge2;
+		ConflictResponseData *response2;
 
 		g_error_free (error);
 
@@ -4581,14 +4593,14 @@ copy_move_file (CopyMoveJob *copy_job,
 			goto retry;
 		}
 
-		is_merge = FALSE;
+		is_merge2 = FALSE;
 
 		if (is_dir (dest) && is_dir (src)) {
-			is_merge = TRUE;
+			is_merge2 = TRUE;
 		}
 
-		if ((is_merge && job->merge_all) ||
-		    (!is_merge && job->replace_all)) {
+		if ((is_merge2 && job->merge_all) ||
+		    (!is_merge2 && job->replace_all)) {
 			overwrite = TRUE;
 			goto retry;
 		}
@@ -4597,33 +4609,33 @@ copy_move_file (CopyMoveJob *copy_job,
 			goto out;
 		}
 
-		response = run_conflict_dialog (job, src, dest, dest_dir);	
+		response2 = run_conflict_dialog (job, src, dest, dest_dir);	
 
-		if (response->id == GTK_RESPONSE_CANCEL ||
-		    response->id == GTK_RESPONSE_DELETE_EVENT) {
-			conflict_response_data_free (response);
+		if (response2->id == GTK_RESPONSE_CANCEL ||
+		    response2->id == GTK_RESPONSE_DELETE_EVENT) {
+			conflict_response_data_free (response2);
 			abort_job (job);
-		} else if (response->id == CONFLICT_RESPONSE_SKIP) {
-			if (response->apply_to_all) {
+		} else if (response2->id == CONFLICT_RESPONSE_SKIP) {
+			if (response2->apply_to_all) {
 				job->skip_all_conflict = TRUE;
 			}
-			conflict_response_data_free (response);
-		} else if (response->id == CONFLICT_RESPONSE_REPLACE) { /* merge/replace */
-			if (response->apply_to_all) {
-				if (is_merge) {
+			conflict_response_data_free (response2);
+		} else if (response2->id == CONFLICT_RESPONSE_REPLACE) { /* merge/replace */
+			if (response2->apply_to_all) {
+				if (is_merge2) {
 					job->merge_all = TRUE;
 				} else {
 					job->replace_all = TRUE;
 				}
 			}
 			overwrite = TRUE;
-			conflict_response_data_free (response);
+			conflict_response_data_free (response2);
 			goto retry;
-		} else if (response->id == CONFLICT_RESPONSE_RENAME) {
+		} else if (response2->id == CONFLICT_RESPONSE_RENAME) {
 			g_object_unref (dest);
 			dest = get_target_file_for_display_name (dest_dir,
-								 response->new_name);
-			conflict_response_data_free (response);
+								 response2->new_name);
+			conflict_response_data_free (response2);
 			goto retry;
 		} else {
 			g_assert_not_reached ();
@@ -5212,7 +5224,7 @@ move_file_prepare (CopyMoveJob *move_job,
 	else if (!overwrite &&
 		 IS_IO_ERROR (error, EXISTS)) {
 		gboolean is_merge;
-		ConflictResponseData *response;
+		ConflictResponseData *response2;
 		
 		g_error_free (error);
 
@@ -5231,19 +5243,19 @@ move_file_prepare (CopyMoveJob *move_job,
 			goto out;
 		}
 
-		response = run_conflict_dialog (job, src, dest, dest_dir);
+		response2 = run_conflict_dialog (job, src, dest, dest_dir);
 
-		if (response->id == GTK_RESPONSE_CANCEL ||
-		    response->id == GTK_RESPONSE_DELETE_EVENT) {
-			conflict_response_data_free (response);	
+		if (response2->id == GTK_RESPONSE_CANCEL ||
+		    response2->id == GTK_RESPONSE_DELETE_EVENT) {
+			conflict_response_data_free (response2);	
 			abort_job (job);
-		} else if (response->id == CONFLICT_RESPONSE_SKIP) {
-			if (response->apply_to_all) {
+		} else if (response2->id == CONFLICT_RESPONSE_SKIP) {
+			if (response2->apply_to_all) {
 				job->skip_all_conflict = TRUE;
 			}
-			conflict_response_data_free (response);
-		} else if (response->id == CONFLICT_RESPONSE_REPLACE) { /* merge/replace */
-			if (response->apply_to_all) {
+			conflict_response_data_free (response2);
+		} else if (response2->id == CONFLICT_RESPONSE_REPLACE) { /* merge/replace */
+			if (response2->apply_to_all) {
 				if (is_merge) {
 					job->merge_all = TRUE;
 				} else {
@@ -5251,13 +5263,13 @@ move_file_prepare (CopyMoveJob *move_job,
 				}
 			}
 			overwrite = TRUE;
-			conflict_response_data_free (response);
+			conflict_response_data_free (response2);
 			goto retry;
-		} else if (response->id == CONFLICT_RESPONSE_RENAME) {
+		} else if (response2->id == CONFLICT_RESPONSE_RENAME) {
 			g_object_unref (dest);
 			dest = get_target_file_for_display_name (dest_dir,
-								 response->new_name);
-			conflict_response_data_free (response);
+								 response2->new_name);
+			conflict_response_data_free (response2);
 			goto retry;
 		} else {
 			g_assert_not_reached ();
@@ -6315,7 +6327,7 @@ create_job (GIOSchedulerJob *io_job,
 	gboolean filename_is_utf8;
 	char *primary, *secondary, *details;
 	int response;
-	char *data;
+	const char *data;
 	int length;
 	GFileOutputStream *out;
 	gboolean handled_invalid_filename;
@@ -6474,7 +6486,7 @@ create_job (GIOSchedulerJob *io_job,
 				filename2 = g_strdup_printf ("%s %d%s", filename_base, count, suffix);
 
 				new_filename = NULL;
-				if (max_length > 0 && strlen (filename2) > max_length) {
+				if (max_length > 0 && strlen (filename2) > (size_t) max_length) {
 					new_filename = shorten_utf8_string (filename2, strlen (filename2) - max_length);
 				}
 
@@ -6512,7 +6524,7 @@ create_job (GIOSchedulerJob *io_job,
 
 			filename2 = g_strdup_printf ("%s %d%s", filename_base, ++count, suffix);
 
-			if (max_length > 0 && strlen (filename2) > max_length) {
+			if (max_length > 0 && strlen (filename2) > (size_t) max_length) {
 				new_filename = shorten_utf8_string (filename2, strlen (filename2) - max_length);
 				if (new_filename != NULL) {
 					g_free (filename2);
@@ -7170,7 +7182,6 @@ should_start_immediately (OpKind kind, gpointer op_data)
 
     switch (kind) {
         case OP_KIND_CREATE:
-        case OP_KIND_TRUST:
         case OP_KIND_EMPTY_TRASH:
         case OP_KIND_PERMISSIONS:
         case OP_KIND_LINK:

@@ -2821,6 +2821,8 @@ get_time (NemoFile *file,
 	case NEMO_DATE_TYPE_TRASHED:
 		time = file->details->trash_time;
 		break;
+	case NEMO_DATE_TYPE_CHANGED:
+	case NEMO_DATE_TYPE_PERMISSIONS_CHANGED:
 	default:
 		g_assert_not_reached ();
 		break;
@@ -3302,6 +3304,7 @@ nemo_file_compare_for_sort (NemoFile *file_1,
 				reversed = FALSE;
 			}
 			break;
+		case NEMO_FILE_SORT_NONE:
 		default:
 			g_return_val_if_reached (0);
 		}
@@ -4200,7 +4203,7 @@ nemo_file_should_show_thumbnail (NemoFile *file)
 	 * of the original file.
 	 */
 	if (file->details->thumbnail_path == NULL &&
-	    nemo_file_get_size (file) > cached_thumbnail_limit) {
+	    (guint64) nemo_file_get_size (file) > cached_thumbnail_limit) {
 		return FALSE;
 	}
 
@@ -4279,7 +4282,7 @@ clean_up_metadata_keywords (NemoFile *file,
 {
 	NemoFile *parent_file;
 	GList *l, *res = NULL;
-	char *exclude[4];
+	const char *exclude[4];
 	char *keyword;
 	gboolean found;
 	gint i;
@@ -4423,7 +4426,7 @@ apply_emblems_to_icon (NemoFile *file,
 			continue;
 		}
 
-        if (flags & NEMO_FILE_ICON_FLAGS_USE_ONE_EMBLEM &&
+        if ((flags & NEMO_FILE_ICON_FLAGS_USE_ONE_EMBLEM) &&
         		!nemo_icon_theme_can_render (G_THEMED_ICON (emblem_icon))) {
         	continue;
         }
@@ -4512,19 +4515,19 @@ nemo_file_get_gicon (NemoFile *file,
 
 			/* "folder" should override "inode-directory", not the other way around */
 			if (is_inode_directory) {
-				g_ptr_array_add (prepend_array, "folder");
+				g_ptr_array_add (prepend_array, (gpointer) "folder");
 			}
 			if (is_folder && (flags & NEMO_FILE_ICON_FLAGS_FOR_OPEN_FOLDER)) {
-				g_ptr_array_add (prepend_array, "folder-open");
+				g_ptr_array_add (prepend_array, (gpointer) "folder-open");
 			}
 			if (is_folder &&
 			    (flags & NEMO_FILE_ICON_FLAGS_IGNORE_VISITING) == 0 &&
 			    nemo_file_has_open_window (file)) {
-				g_ptr_array_add (prepend_array, "folder-visiting");
+				g_ptr_array_add (prepend_array, (gpointer) "folder-visiting");
 			}
 			if (is_folder &&
 			    (flags & NEMO_FILE_ICON_FLAGS_FOR_DRAG_ACCEPT)) {
-				g_ptr_array_add (prepend_array, "folder-drag-accept");
+				g_ptr_array_add (prepend_array, (gpointer) "folder-drag-accept");
 			}
 
 			if (prepend_array->len) {
@@ -4715,7 +4718,7 @@ nemo_file_get_icon (NemoFile *file,
 	DEBUG ("Called file_get_icon(), at size %d, force thumbnail %d", size,
 	       flags & NEMO_FILE_ICON_FLAGS_FORCE_THUMBNAIL_SIZE);
 
-	if (flags & NEMO_FILE_ICON_FLAGS_USE_THUMBNAILS &&
+	if ((flags & NEMO_FILE_ICON_FLAGS_USE_THUMBNAILS) &&
 	    nemo_file_should_show_thumbnail (file)) {
 		icon = nemo_file_get_thumbnail_icon (file, size, scale, flags);
 	}
@@ -6209,7 +6212,7 @@ nemo_file_get_owner_as_string (NemoFile *file, gboolean include_real_name)
 	}
 
 	if (include_real_name &&
-	    file->details->uid == getuid ()) {
+	    file->details->uid == (int) getuid ()) {
 		/* Translators: "Me" is used to indicate the file is owned by me (the current user) */
 		user_name = g_strdup (_("Me"));
 	} else if (file->details->owner_real == NULL) {
@@ -6370,7 +6373,12 @@ nemo_file_get_deep_count_as_string_internal (NemoFile *file,
 			if (unreadable_count != 0) {
 				return NULL;
 			}
-		default: break;
+			break;
+		case NEMO_REQUEST_NOT_STARTED:
+			break;
+		default:
+			g_assert_not_reached ();
+			break;
 		}
 	}
 
@@ -6728,7 +6736,7 @@ get_basic_type_for_mime_type (const char *mime_type)
 
 	icon_name = g_content_type_get_generic_icon_name (mime_type);
 	if (icon_name != NULL) {
-		int i;
+		size_t i;
 
 		for (i = 0; i < G_N_ELEMENTS (mime_type_map); i++) {
 			if (strcmp (mime_type_map[i].icon_name, icon_name) == 0) {
@@ -7282,7 +7290,7 @@ gboolean
 nemo_file_is_archive (NemoFile *file)
 {
 	char *mime_type;
-	int i;
+	size_t i;
 	static const char * archive_mime_types[] = { "application/x-gtar",
 						     "application/x-zip",
 						     "application/x-zip-compressed",
@@ -7690,7 +7698,7 @@ nemo_file_construct_tooltip (NemoFile *file, NemoFileTooltipFlags flags)
     }
 
     if (nemo_file_is_directory (file)) {
-        gint item_count;
+        guint item_count;
         if (nemo_file_get_directory_item_count (file, &item_count, NULL)) {
             gchar *launchpad_sucks = THOU_TO_STR (item_count);
             gchar *count = g_strdup_printf (ngettext ("%s item", "%s items", item_count), launchpad_sucks);
@@ -7997,9 +8005,13 @@ nemo_file_dump (NemoFile *file)
 		case G_FILE_TYPE_SYMBOLIC_LINK:
 			file_kind = "symbolic link";
 			break;
+		case G_FILE_TYPE_SHORTCUT:
+		case G_FILE_TYPE_MOUNTABLE:
 		case G_FILE_TYPE_UNKNOWN:
-		default:
 			file_kind = "unknown";
+			break;
+		default:
+			g_assert_not_reached ();
 			break;
 		}
 		g_print ("kind: %s \n", file_kind);

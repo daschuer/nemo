@@ -262,7 +262,7 @@ nemo_file_undo_manager_get_state (void)
 }
 
 void
-nemo_file_undo_manager_push_flag ()
+nemo_file_undo_manager_push_flag (void)
 {
 	NemoFileUndoManager *self = get_singleton ();
 	NemoFileUndoManagerPrivate *priv = self->priv;
@@ -271,7 +271,7 @@ nemo_file_undo_manager_push_flag ()
 }
 
 gboolean
-nemo_file_undo_manager_pop_flag ()
+nemo_file_undo_manager_pop_flag (void)
 {
 	NemoFileUndoManager *self = get_singleton ();
 	NemoFileUndoManagerPrivate *priv = self->priv;
@@ -286,7 +286,7 @@ nemo_file_undo_manager_pop_flag ()
 }
 
 NemoFileUndoManager *
-nemo_file_undo_manager_get ()
+nemo_file_undo_manager_get (void)
 {
 	return get_singleton ();
 }

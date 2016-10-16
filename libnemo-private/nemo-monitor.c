@@ -112,7 +112,8 @@ dir_changed (GFileMonitor* monitor,
 	}
 
 	switch (event_type) {
-	default:
+	case G_FILE_MONITOR_EVENT_MOVED:
+	case G_FILE_MONITOR_EVENT_PRE_UNMOUNT:
 	case G_FILE_MONITOR_EVENT_CHANGED:
 		/* ignore */
 		break;
@@ -126,6 +127,9 @@ dir_changed (GFileMonitor* monitor,
 		break;
 	case G_FILE_MONITOR_EVENT_CREATED:
 		nemo_file_changes_queue_file_added (child);
+		break;
+	default:
+		g_assert_not_reached ();
 		break;
 	}
 

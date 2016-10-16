@@ -244,13 +244,13 @@ enum {
 
 /* Target types for dragging from the shortcuts list */
 static const GtkTargetEntry nemo_shortcuts_source_targets[] = {
-	{ "GTK_TREE_MODEL_ROW", GTK_TARGET_SAME_WIDGET, GTK_TREE_MODEL_ROW }
+	{ (gchar *) "GTK_TREE_MODEL_ROW", GTK_TARGET_SAME_WIDGET, GTK_TREE_MODEL_ROW }
 };
 
 /* Target types for dropping into the shortcuts list */
 static const GtkTargetEntry nemo_shortcuts_drop_targets [] = {
-	{ "GTK_TREE_MODEL_ROW", GTK_TARGET_SAME_WIDGET, GTK_TREE_MODEL_ROW },
-	{ "text/uri-list", 0, TEXT_URI_LIST }
+	{ (gchar *) "GTK_TREE_MODEL_ROW", GTK_TARGET_SAME_WIDGET, GTK_TREE_MODEL_ROW },
+	{ (gchar *) "text/uri-list", 0, TEXT_URI_LIST }
 };
 
 /* Drag and drop interface declarations */
@@ -509,8 +509,12 @@ static void expand_or_collapse_category (NemoPlacesSidebar *sidebar,
         case SECTION_NETWORK:
             sidebar->network_expanded = expand;
             break;
-        default:
-            break;
+        case SECTION_XDG_BOOKMARKS:
+        	break;
+		default:
+			g_assert_not_reached ();
+			break;
+
     }
 
     restore_expand_state (sidebar);
@@ -654,6 +658,7 @@ update_places (NemoPlacesSidebar *sidebar)
 	GVolume *volume;
 	int bookmark_count, bookmark_index = 0;
 	char *location, *mount_uri, *name, *last_uri, *identifier;
+    const char *mount_uri_c;
 	const gchar *bookmark_name;
 	GIcon *icon;
 	GFile *root;
@@ -769,27 +774,27 @@ update_places (NemoPlacesSidebar *sidebar)
     }
 
     if (recent_is_supported ()) {
-        mount_uri = "recent:///"; /* No need to strdup */
+        mount_uri_c = "recent:///";
         icon = g_themed_icon_new ("document-open-recent");
         cat_iter = add_place (sidebar, PLACES_BUILT_IN,
                               SECTION_COMPUTER,
-                              _("Recent"), icon, mount_uri,
+                              _("Recent"), icon, mount_uri_c,
                               NULL, NULL, NULL, 0,
                               _("Recent files"), 0, FALSE, cat_iter);
         g_object_unref (icon);
-        sidebar->bottom_bookend_uri = g_strdup (mount_uri);
+        sidebar->bottom_bookend_uri = g_strdup (mount_uri_c);
     }
 
     /* file system root */
-    mount_uri = "file:///"; /* No need to strdup */
+    mount_uri_c = "file:///";
     icon = g_themed_icon_new (NEMO_ICON_FILESYSTEM);
-    full = get_disk_full (g_file_new_for_uri (mount_uri), &tooltip_info);
+    full = get_disk_full (g_file_new_for_uri (mount_uri_c), &tooltip_info);
     tooltip = g_strdup_printf (_("Open the contents of the File System\n%s"), tooltip_info);
     g_free (tooltip_info);
     cat_iter = add_place (sidebar, PLACES_BUILT_IN,
                            SECTION_COMPUTER,
                            _("File System"), icon,
-                           mount_uri, NULL, NULL, NULL, 0,
+                           mount_uri_c, NULL, NULL, NULL, 0,
                            tooltip,
                            full, TRUE,
                            cat_iter);
@@ -797,13 +802,13 @@ update_places (NemoPlacesSidebar *sidebar)
     g_free (tooltip);
 
     if (!recent_is_supported())
-        sidebar->bottom_bookend_uri = g_strdup (mount_uri);
+        sidebar->bottom_bookend_uri = g_strdup (mount_uri_c);
 
-    mount_uri = "trash:///"; /* No need to strdup */
+    mount_uri_c = "trash:///";
     icon = nemo_trash_monitor_get_icon ();
     cat_iter = add_place (sidebar, PLACES_BUILT_IN,
                            SECTION_COMPUTER,
-                           _("Trash"), icon, mount_uri,
+                           _("Trash"), icon, mount_uri_c,
                            NULL, NULL, NULL, 0,
                            _("Open the trash"), 0, FALSE,
                            cat_iter);
@@ -1109,12 +1114,12 @@ update_places (NemoPlacesSidebar *sidebar)
 	g_list_free_full (network_mounts, g_object_unref);
 
 	/* network:// */
- 	mount_uri = "network:///"; /* No need to strdup */
+ 	mount_uri_c = "network:///";
 	icon = g_themed_icon_new (NEMO_ICON_NETWORK);
 	cat_iter = add_place (sidebar, PLACES_BUILT_IN,
                 		   SECTION_NETWORK,
                 		   _("Network"), icon,
-                		   mount_uri, NULL, NULL, NULL, 0,
+                		   mount_uri_c, NULL, NULL, NULL, 0,
                 		   _("Browse the contents of the network"), 0, FALSE,
                            cat_iter);
 	g_object_unref (icon);
@@ -1412,7 +1417,10 @@ cat_is_expanded (NemoPlacesSidebar *sidebar,
             return sidebar->devices_expanded;
         case SECTION_NETWORK:
             return sidebar->network_expanded;
+        case SECTION_XDG_BOOKMARKS:
+        	return TRUE;
         default:
+        	g_assert_not_reached ();
             return TRUE;
     }
 }
@@ -1508,7 +1516,7 @@ compute_drop_position (GtkTreeView *tree_view,
         goto fail;
 	} else if (place_type == PLACES_HEADING) {
         if (section_type == SECTION_BOOKMARKS &&
-            nemo_bookmark_list_length (sidebar->bookmarks) == sidebar->bookmark_breakpoint) {
+            (gint) nemo_bookmark_list_length (sidebar->bookmarks) == sidebar->bookmark_breakpoint) {
             *pos = GTK_TREE_VIEW_DROP_AFTER;
             g_free (drop_target_uri);
             return TRUE;
@@ -1906,7 +1914,7 @@ reorder_bookmarks (NemoPlacesSidebar *sidebar,
 
 	if (type != PLACES_BOOKMARK ||
 	    old_position < 0 ||
-	    old_position >= nemo_bookmark_list_length (sidebar->bookmarks)) {
+	    (guint) old_position >= nemo_bookmark_list_length (sidebar->bookmarks)) {
 		return;
 	}
 
@@ -2131,7 +2139,7 @@ check_have_gnome_disks (void)
 }
 
 static gboolean
-check_have_palimpsest ()
+check_have_palimpsest (void)
 {
 	gchar *palimpsest_path;
 	gboolean res;
@@ -4018,7 +4026,7 @@ row_visibility_function (GtkTreeModel *model,
     if (sidebar->in_drag)
         return TRUE;
 
-    if (nemo_bookmark_list_length (sidebar->bookmarks) > sidebar->bookmark_breakpoint)
+    if ((gint) nemo_bookmark_list_length (sidebar->bookmarks) > sidebar->bookmark_breakpoint)
         return TRUE;
 
     return FALSE;

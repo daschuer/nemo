@@ -639,7 +639,7 @@ report_node_inserted (FMTreeModel *model, TreeNode *node)
     gboolean add_child = FALSE;
 
 	if (node->directory != NULL) {
-        gint count;
+        guint count;
         if (nemo_file_get_directory_item_count (node->file, &count, NULL)) {
             add_child = count > 0 || node->parent == NULL;
         } else {
@@ -1728,6 +1728,7 @@ fm_tree_model_iter_compare_roots (FMTreeModel *model,
 		}
 	}
 	g_assert_not_reached ();
+	return 0;
 }
 
 gboolean

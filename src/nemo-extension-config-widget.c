@@ -44,7 +44,7 @@ update_restart_visiblity (NemoExtensionConfigWidget *widget)
         goto out;
     }
 
-    int i;
+    guint i;
     for (i = 0; i < g_strv_length (new_settings); i++) {
         GList *l = g_list_find_custom (tmp, new_settings[i], (GCompareFunc) g_strcmp0);
         if (!l) {
@@ -93,7 +93,7 @@ on_check_toggled(GtkWidget *button, ExtensionProxy *proxy)
 
     GPtrArray *new_list = g_ptr_array_new ();
 
-    int i;
+    guint i;
 
     if (enabled) {
         for (i = 0; i < g_strv_length (blacklist); i++) {
@@ -153,7 +153,7 @@ detect_extensions (NemoExtensionConfigWidget *widget)
 
 	    g_free (out);
 
-	    int i;
+	    guint i;
 	    for (i = 0; i < g_strv_length (lines); i++) {
 		if (g_str_has_prefix (lines[i], LINE_PREFIX)) {
 		    ExtensionProxy *p = g_slice_new0 (ExtensionProxy);
@@ -218,7 +218,7 @@ refresh_widget (NemoExtensionConfigWidget *widget)
             ExtensionProxy *proxy = l->data;
 
             gboolean active = TRUE;
-            gint i = 0;
+            guint i = 0;
 
             for (i = 0; i < g_strv_length (blacklist); i++) {
                 if (g_strcmp0 (blacklist[i], proxy->name) == 0) {
@@ -378,7 +378,7 @@ nemo_extension_config_widget_init (NemoExtensionConfigWidget *self)
 
     gchar **init_settings = g_settings_get_strv (nemo_plugin_preferences,
     		                                     NEMO_PLUGIN_PREFERENCES_DISABLED_EXTENSIONS);
-    int i;
+    guint i;
     for (i = 0; i < g_strv_length (init_settings); i++) {
         self->initial_extension_ids = g_list_append (self->initial_extension_ids, g_strdup (init_settings[i]));
     }

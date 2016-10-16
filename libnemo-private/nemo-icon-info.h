@@ -69,9 +69,9 @@ gboolean              nemo_icon_info_is_fallback                  (NemoIconInfo 
 GdkPixbuf *           nemo_icon_info_get_pixbuf                   (NemoIconInfo  *icon);
 GdkPixbuf *           nemo_icon_info_get_pixbuf_nodefault         (NemoIconInfo  *icon);
 GdkPixbuf *           nemo_icon_info_get_pixbuf_nodefault_at_size (NemoIconInfo  *icon,
-								       gsize              forced_size);
+								       int              forced_size);
 GdkPixbuf *           nemo_icon_info_get_pixbuf_at_size           (NemoIconInfo  *icon,
-								       gsize              forced_size);
+								       int              forced_size);
 gboolean              nemo_icon_info_get_embedded_rect            (NemoIconInfo  *icon,
 								       GdkRectangle      *rectangle);
 gboolean              nemo_icon_info_get_attach_points            (NemoIconInfo  *icon,

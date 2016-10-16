@@ -112,7 +112,7 @@ assert_event_matches_template (ZeitgeistEvent *event, ZeitgeistEvent *tmpl)
 static void
 assert_results_as_expected (Fixture *fix, ZeitgeistResultSet *results)
 {
-    int i;
+    guint i;
 
     g_assert_cmpint (zeitgeist_result_set_size (results), ==,
         fix->num_expected_events);
@@ -185,7 +185,7 @@ test_copy_move (Fixture *fix, gconstpointer data)
 
     GList *item_uris = NULL;
     item_uris = g_list_prepend (item_uris,
-                                TEST_URI "/moveme.txt");
+                                (gpointer) TEST_URI "/moveme.txt");
 
     nemo_file_operations_copy_move (
             item_uris,

@@ -29,7 +29,7 @@
 
 #include "nemo-application.h"
 
-#if ENABLE_EMPTY_VIEW
+#if (defined(ENABLE_EMPTY_VIEW) && ENABLE_EMPTY_VIEW)
 #include "nemo-empty-view.h"
 #endif /* ENABLE_EMPTY_VIEW */
 
@@ -565,7 +565,7 @@ go_to_server_cb (NemoWindow *window,
 
 	if (error == NULL) {
 		GBookmarkFile *bookmarks;
-		GError *error = NULL;
+		GError *error2 = NULL;
 		char *datadir;
 		char *filename;
 		char *uri;
@@ -582,14 +582,14 @@ go_to_server_cb (NemoWindow *window,
 		g_free (datadir);
 		g_bookmark_file_load_from_file (bookmarks,
 						filename,
-						&error);
-		if (error != NULL) {
-			if (! g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
+						&error2);
+		if (error2 != NULL) {
+			if (! g_error_matches (error2, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
 				/* only warn if the file exists */
-				g_warning ("Unable to open server bookmarks: %s", error->message);
+				g_warning ("Unable to open server bookmarks: %s", error2->message);
 				safe_to_save = FALSE;
 			}
-			g_error_free (error);
+			g_error_free (error2);
 		}
 
 		if (safe_to_save) {
@@ -850,7 +850,7 @@ const GOptionEntry options[] = {
 
 static gint
 nemo_application_handle_file_args (NemoApplication *self,
-				       GVariantDict        *options)
+				       GVariantDict        *dict)
 {
 	GFile **files;
 	GFile *file;
@@ -859,7 +859,7 @@ nemo_application_handle_file_args (NemoApplication *self,
 	GPtrArray *file_array;
 	gboolean new_window = FALSE;
 
-	g_variant_dict_lookup (options, G_OPTION_REMAINING, "^a&s", &remaining);
+	g_variant_dict_lookup (dict, G_OPTION_REMAINING, "^a&s", &remaining);
 
 	/* Convert args to GFiles */
 	file_array = g_ptr_array_new_full (0, g_object_unref);
@@ -869,7 +869,7 @@ nemo_application_handle_file_args (NemoApplication *self,
 			file = g_file_new_for_commandline_arg (remaining[idx]);
 			g_ptr_array_add (file_array, file);
 		}
-	} else if (g_variant_dict_contains (options, "new-window") || self->priv->geometry) {
+	} else if (g_variant_dict_contains (dict, "new-window") || self->priv->geometry) {
 		file = g_file_new_for_path (g_get_home_dir ());
 		g_ptr_array_add (file_array, file);
 		new_window = TRUE;
@@ -881,7 +881,7 @@ nemo_application_handle_file_args (NemoApplication *self,
 	len = file_array->len;
 	files = (GFile **) file_array->pdata;
 
-	if (g_variant_dict_contains (options, "select")) {
+	if (g_variant_dict_contains (dict, "select")) {
 		nemo_application_select (self, files, len);
 	} else {
 		/* Invoke "Open" to create new windows */
@@ -903,7 +903,7 @@ nemo_application_handle_file_args (NemoApplication *self,
 
 static gint
 nemo_application_handle_local_options (GApplication *application,
-					   GVariantDict *options)
+					   GVariantDict *dict)
 {
 	NemoApplication *self = NEMO_APPLICATION (application);
 	gint retval = -1;
@@ -911,24 +911,24 @@ nemo_application_handle_local_options (GApplication *application,
 
 	nemo_profile_start (NULL);
 
-	if (g_variant_dict_contains (options, "version")) {
+	if (g_variant_dict_contains (dict, "version")) {
 		g_print ("nemo " PACKAGE_VERSION "\n");		
 		retval = EXIT_SUCCESS;
 		goto out;
 	}
 
-	if (!do_cmdline_sanity_checks (self, options)) {
+	if (!do_cmdline_sanity_checks (self, dict)) {
 		retval = EXIT_FAILURE;
 		goto out;
 	}
 
-	if (g_variant_dict_contains (options, "check")) {
+	if (g_variant_dict_contains (dict, "check")) {
 		retval = do_perform_self_checks ();
 		goto out;
 	}
 
 #ifndef GNOME_BUILD
-	if (g_variant_dict_contains (options, "fix-cache")) {
+	if (g_variant_dict_contains (dict, "fix-cache")) {
 		if (geteuid () != 0) {
 			g_printerr ("The --fix-cache option must be run with sudo or as the root user.\n");
 		} else {
@@ -951,22 +951,22 @@ nemo_application_handle_local_options (GApplication *application,
 		goto out;
 	}
 
-	if (g_variant_dict_contains (options, "quit")) {
+	if (g_variant_dict_contains (dict, "quit")) {
 		DEBUG ("Killing application, as requested");
 		g_action_group_activate_action (G_ACTION_GROUP (application),
 						"quit", NULL);
 		goto out;
 	}
 
-	if (g_variant_dict_contains (options, "force-desktop")) {
+	if (g_variant_dict_contains (dict, "force-desktop")) {
 		DEBUG ("Forcing desktop, as requested");
 		self->priv->force_desktop = TRUE;
-	} else if (g_variant_dict_contains (options, "no-desktop")) {
+	} else if (g_variant_dict_contains (dict, "no-desktop")) {
 		DEBUG ("Forcing desktop off, as requested");
 		self->priv->no_desktop = TRUE;
 	}
 
-	if (g_variant_dict_contains (options, "no-default-window")) {
+	if (g_variant_dict_contains (dict, "no-default-window")) {
 		/* We want to avoid trigering the activate signal; so no window is created.
 		 * GApplication doesn't call activate if we return a value >= 0.
 		 * Use EXIT_SUCCESS since is >= 0. */
@@ -974,9 +974,9 @@ nemo_application_handle_local_options (GApplication *application,
 		goto out;
 	}
 
-	g_variant_dict_lookup (options, "geometry", "s", &self->priv->geometry);
+	g_variant_dict_lookup (dict, "geometry", "s", &self->priv->geometry);
 
-	retval = nemo_application_handle_file_args (self, options);
+	retval = nemo_application_handle_file_args (self, dict);
 
  out:
 	nemo_profile_end (NULL);
@@ -1387,7 +1387,7 @@ nemo_application_startup (GApplication *app)
 	nemo_desktop_canvas_view_register ();
 	nemo_list_view_register ();
 	nemo_canvas_view_compact_register ();
-#if ENABLE_EMPTY_VIEW
+#if defined(ENABLE_EMPTY_VIEW) && ENABLE_EMPTY_VIEW
 	nemo_empty_view_register ();
 #endif
 	nemo_profile_end ("Register views");

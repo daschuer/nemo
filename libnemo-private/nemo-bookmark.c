@@ -147,7 +147,7 @@ bookmark_set_name_from_ready_file (NemoBookmark *self,
 }
 
 static void
-apply_emblem (GIcon **base, gchar *emblem_name)
+apply_emblem (GIcon **base, const gchar *emblem_name)
 {
 	GIcon *themed_icon, *emblemed_icon;
 	GEmblem *emblem;
@@ -290,7 +290,7 @@ construct_default_icon_from_metadata (NemoBookmark *bookmark,
     if (*icon != NULL && md->emblems != NULL) {		
         apply_emblem(icon, md->emblems[0]);
 
-		gint i = 1;
+		guint i = 1;
         while (i < g_strv_length (md->emblems)) {
             GIcon *emb_icon = g_themed_icon_new (md->emblems[i]);
             GEmblem *emblem = g_emblem_new (emb_icon);
@@ -1063,8 +1063,7 @@ nemo_bookmark_metadata_compare (NemoBookmarkMetadata *d1,
         (g_strv_length (d1->emblems) != g_strv_length (d2->emblems)))
         return FALSE;
 
-    gint i;
-
+    guint i;
     for (i = 0; i < g_strv_length (d1->emblems); i++) {
         if (g_strcmp0 (d1->emblems[i], d2->emblems[i]) != 0)
             return FALSE;

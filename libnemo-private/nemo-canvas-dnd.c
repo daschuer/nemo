@@ -64,20 +64,20 @@
 #include "nemo-debug.h"
 
 static const GtkTargetEntry drag_types [] = {
-	{ NEMO_ICON_DND_GNOME_ICON_LIST_TYPE, 0, NEMO_ICON_DND_GNOME_ICON_LIST },
-	{ NEMO_ICON_DND_URI_LIST_TYPE, 0, NEMO_ICON_DND_URI_LIST },
+	{ (gchar *) NEMO_ICON_DND_GNOME_ICON_LIST_TYPE, 0, NEMO_ICON_DND_GNOME_ICON_LIST },
+	{ (gchar *) NEMO_ICON_DND_URI_LIST_TYPE, 0, NEMO_ICON_DND_URI_LIST },
 };
 
 static const GtkTargetEntry drop_types [] = {
-	{ NEMO_ICON_DND_GNOME_ICON_LIST_TYPE, 0, NEMO_ICON_DND_GNOME_ICON_LIST },
+	{ (gchar *) NEMO_ICON_DND_GNOME_ICON_LIST_TYPE, 0, NEMO_ICON_DND_GNOME_ICON_LIST },
 	/* prefer "_NETSCAPE_URL" over "text/uri-list" to satisfy web browsers. */
-	{ NEMO_ICON_DND_NETSCAPE_URL_TYPE, 0, NEMO_ICON_DND_NETSCAPE_URL },
+	{ (gchar *) NEMO_ICON_DND_NETSCAPE_URL_TYPE, 0, NEMO_ICON_DND_NETSCAPE_URL },
 	/* prefer XDS over "text/uri-list" */	
-	{ NEMO_ICON_DND_XDNDDIRECTSAVE_TYPE, 0, NEMO_ICON_DND_XDNDDIRECTSAVE }, /* XDS Protocol Type */
-    { NEMO_ICON_DND_URI_LIST_TYPE, 0, NEMO_ICON_DND_URI_LIST },
-	{ NEMO_ICON_DND_RAW_TYPE, 0, NEMO_ICON_DND_RAW },
+	{ (gchar *) NEMO_ICON_DND_XDNDDIRECTSAVE_TYPE, 0, NEMO_ICON_DND_XDNDDIRECTSAVE }, /* XDS Protocol Type */
+    { (gchar *) NEMO_ICON_DND_URI_LIST_TYPE, 0, NEMO_ICON_DND_URI_LIST },
+	{ (gchar *) NEMO_ICON_DND_RAW_TYPE, 0, NEMO_ICON_DND_RAW },
 	/* Must be last: */
-	{ NEMO_ICON_DND_ROOTWINDOW_DROP_TYPE,  0, NEMO_ICON_DND_ROOTWINDOW_DROP }
+	{ (gchar *) NEMO_ICON_DND_ROOTWINDOW_DROP_TYPE,  0, NEMO_ICON_DND_ROOTWINDOW_DROP }
 };
 static void     stop_dnd_highlight         (GtkWidget      *widget);
 static void     dnd_highlight_queue_redraw (GtkWidget      *widget);
@@ -1132,6 +1132,9 @@ nemo_canvas_container_get_drop_action (NemoCanvasContainer *container,
 	case NEMO_ICON_DND_RAW:
 		*action = GDK_ACTION_COPY;
 		break;
+	default:
+		g_assert_not_reached ();
+		break;
 	}
 
 	g_free (drop_target);
@@ -1611,6 +1614,9 @@ drag_data_received_callback (GtkWidget *widget,
 	case NEMO_ICON_DND_ROOTWINDOW_DROP:
 		/* Do nothing, this won't even happen, since we don't want to call get_data twice */
 		break;
+	default:
+		g_assert_not_reached ();
+		break;
 	}
 
 	/* this is the second use case of this callback.
@@ -1698,6 +1704,9 @@ drag_data_received_callback (GtkWidget *widget,
 			}
 			break;
 		} /* NEMO_ICON_DND_XDNDDIRECTSAVE */
+		default:
+			g_assert_not_reached ();
+			break;
 		}
 		gtk_drag_finish (context, success, FALSE, time);
 

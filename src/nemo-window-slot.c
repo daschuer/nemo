@@ -1966,7 +1966,7 @@ handle_go_direction (NemoWindowSlot *slot,
 	GList **list_ptr, **other_list_ptr;
 	GList *list, *other_list, *link;
 	NemoBookmark *bookmark;
-	gint i;
+	guint i;
 
 	list_ptr = (forward) ? (&slot->details->forward_list) : (&slot->details->back_list);
 	other_list_ptr = (forward) ? (&slot->details->back_list) : (&slot->details->forward_list);
@@ -2034,21 +2034,22 @@ update_history (NemoWindowSlot *slot,
                 NemoLocationChangeType type,
                 GFile *new_location)
 {
-        switch (type) {
-        case NEMO_LOCATION_CHANGE_STANDARD:
+	switch (type) {
+	case NEMO_LOCATION_CHANGE_STANDARD:
 		handle_go_elsewhere (slot, new_location);
-                return;
-        case NEMO_LOCATION_CHANGE_RELOAD:
-                /* for reload there is no work to do */
-                return;
-        case NEMO_LOCATION_CHANGE_BACK:
-                handle_go_direction (slot, new_location, FALSE);
-                return;
-        case NEMO_LOCATION_CHANGE_FORWARD:
-                handle_go_direction (slot, new_location, TRUE);
-                return;
-        }
-	g_return_if_fail (FALSE);
+		return;
+	case NEMO_LOCATION_CHANGE_RELOAD:
+		/* for reload there is no work to do */
+		return;
+	case NEMO_LOCATION_CHANGE_BACK:
+		handle_go_direction (slot, new_location, FALSE);
+		return;
+	case NEMO_LOCATION_CHANGE_FORWARD:
+		handle_go_direction (slot, new_location, TRUE);
+		return;
+	default:
+		g_return_if_fail (FALSE);
+	}
 }
 
 typedef struct {

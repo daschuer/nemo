@@ -485,7 +485,7 @@ set_visible_columns (NemoColumnChooser *chooser,
 
 	visible_columns_hash = g_hash_table_new (g_str_hash, g_str_equal);
 	/* always show the name column */
-	g_hash_table_insert (visible_columns_hash, "name", "name");
+	g_hash_table_insert (visible_columns_hash, (gpointer) "name", (gpointer) "name");
 	for (i = 0; visible_columns[i] != NULL; ++i) {
 		g_hash_table_insert (visible_columns_hash,
 				     visible_columns[i],

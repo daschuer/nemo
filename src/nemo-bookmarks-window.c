@@ -136,7 +136,7 @@ nemo_bookmarks_window_key_press_event_cb (GtkWindow *window,
 					      GdkEventKey *event, 
 					      gpointer user_data)
 {
-	if (event->state & GDK_CONTROL_MASK && event->keyval == GDK_KEY_w) {
+	if ((event->state & GDK_CONTROL_MASK) && event->keyval == GDK_KEY_w) {
 		gtk_widget_destroy (GTK_WIDGET (window));
 		return TRUE;
 	}
@@ -307,11 +307,11 @@ repopulate (NemoBookmarksWindow *self)
 
 		if (bookmark == selected) {
 			/* save old selection */
-			GtkTreePath *path;
+			GtkTreePath *path2;
 
-			path = gtk_tree_model_get_path (GTK_TREE_MODEL (store), &iter);
-			reference = gtk_tree_row_reference_new (GTK_TREE_MODEL (store), path);
-			gtk_tree_path_free (path);
+			path2 = gtk_tree_model_get_path (GTK_TREE_MODEL (store), &iter);
+			reference = gtk_tree_row_reference_new (GTK_TREE_MODEL (store), path2);
+			gtk_tree_path_free (path2);
 		}
 
 		g_object_unref (bookmark_icon);

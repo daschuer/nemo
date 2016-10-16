@@ -38,9 +38,6 @@ struct NemoQueryDetails {
 	char **prepared_words;
 };
 
-static void  nemo_query_class_init       (NemoQueryClass *class);
-static void  nemo_query_init             (NemoQuery      *query);
-
 G_DEFINE_TYPE (NemoQuery, nemo_query, G_TYPE_OBJECT);
 
 static void
@@ -357,10 +354,6 @@ nemo_query_parse_xml (char *xml, gsize xml_len)
 {
 	ParserInfo info = { NULL };
 	GMarkupParseContext *ctx;
-
-	if (xml_len == -1) {
-		xml_len = strlen (xml);
-	}
 	
 	info.query = nemo_query_new ();
 	info.in_text = FALSE;

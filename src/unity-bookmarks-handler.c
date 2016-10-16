@@ -65,7 +65,7 @@ activate_bookmark_by_quicklist (DbusmenuMenuitem *menu,
 }
 
 static void
-unity_bookmarks_handler_remove_bookmark_quicklists () {
+unity_bookmarks_handler_remove_bookmark_quicklists (void) {
 
 	GList *children, *l;
 
@@ -90,7 +90,7 @@ unity_bookmarks_handler_remove_bookmark_quicklists () {
 }
 
 static void
-unity_bookmarks_handler_update_bookmarks () {
+unity_bookmarks_handler_update_bookmarks (void) {
 
 	NemoBookmark *bookmark;
 	guint bookmark_count;
@@ -124,14 +124,14 @@ unity_bookmarks_handler_update_bookmarks () {
 }
 
 static void
-unity_bookmarks_handler_refresh_bookmarks ()
+unity_bookmarks_handler_refresh_bookmarks (void)
 {
 	unity_bookmarks_handler_remove_bookmark_quicklists ();
 	unity_bookmarks_handler_update_bookmarks ();
 }
 
 void
-unity_bookmarks_handler_initialize ()
+unity_bookmarks_handler_initialize (void)
 {
 	unity_quicklist_handler = unity_quicklist_handler_get_singleton ();
 	// get the singleton

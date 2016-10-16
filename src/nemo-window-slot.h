@@ -110,8 +110,6 @@ void    nemo_window_slot_queue_reload		   (NemoWindowSlot *slot);
 
 void			nemo_window_slot_stop_loading	      (NemoWindowSlot	*slot);
 
-void    nemo_window_slot_queue_reload		   (NemoWindowSlot *slot);
-
 void			nemo_window_slot_set_content_view	      (NemoWindowSlot	*slot,
 								       const char		*id);
 const char	       *nemo_window_slot_get_content_view_id      (NemoWindowSlot	*slot);

@@ -1503,7 +1503,8 @@ sort_column_changed_callback (GtkTreeSortable *sortable,
 	gint sort_column_id, default_sort_column_id;
 	GtkSortType reversed;
 	GQuark sort_attr, default_sort_attr;
-	char *reversed_attr, *default_reversed_attr;
+	const char *reversed_attr;
+	const char *default_reversed_attr;
 	gboolean default_sort_reversed;
 
 	file = nemo_view_get_directory_as_file (NEMO_VIEW (view));

@@ -101,7 +101,7 @@ static void
 nemo_search_engine_start (NemoSearchProvider *provider)
 {
 	NemoSearchEngine *engine = NEMO_SEARCH_ENGINE (provider);
-	gint num_finished;
+	guint num_finished;
 
 	DEBUG ("Search engine start");
 
@@ -177,7 +177,7 @@ search_provider_hits_added (NemoSearchProvider *provider,
 static void
 check_providers_status (NemoSearchEngine *engine)
 {
-	gint num_finished = engine->details->providers_error + engine->details->providers_finished;
+	guint num_finished = engine->details->providers_error + engine->details->providers_finished;
 
 	if (num_finished < engine->details->providers_running) {
 		return;
