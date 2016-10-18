@@ -112,7 +112,7 @@ assert_event_matches_template (ZeitgeistEvent *event, ZeitgeistEvent *tmpl)
 static void
 assert_results_as_expected (Fixture *fix, ZeitgeistResultSet *results)
 {
-    int i;
+    guint i;
 
     g_assert_cmpint (zeitgeist_result_set_size (results), ==,
         fix->num_expected_events);
@@ -185,7 +185,7 @@ test_copy_move (Fixture *fix, gconstpointer data)
 
     GList *item_uris = NULL;
     item_uris = g_list_prepend (item_uris,
-                                TEST_URI "/moveme.txt");
+                                (gpointer) TEST_URI "/moveme.txt");
 
     nemo_file_operations_copy_move (
             item_uris,
@@ -233,7 +233,7 @@ test_new_folder (Fixture *fix, gconstpointer data)
     nemo_file_operations_new_folder (
             NULL, NULL,
             TEST_URI,
-            (NemoCopyCallback) zeitgeist_test_start,
+            (NemoCreateCallback) zeitgeist_test_start,
             fix);
 
     g_main_loop_run (fix->mainloop);
@@ -255,7 +255,7 @@ test_new_file (Fixture *fix, gconstpointer data)
             TEST_URI,
             "new_file_test.txt",
             content, strlen (content),
-            (NemoCopyCallback) zeitgeist_test_start,
+            (NemoCreateCallback) zeitgeist_test_start,
             fix);
 
     g_main_loop_run (fix->mainloop);
@@ -276,7 +276,7 @@ test_new_file_from_template (Fixture *fix, gconstpointer data)
             TEST_URI,
             "new_tpl_file_test.py",
             TEST_URI "/a.py",
-            (NemoCopyCallback) zeitgeist_test_start,
+            (NemoCreateCallback) zeitgeist_test_start,
             fix);
 
     g_main_loop_run (fix->mainloop);

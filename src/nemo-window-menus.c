@@ -345,8 +345,8 @@ action_nemo_manual_callback (GtkAction *action,
 	NemoWindow *window;
 	GError *error;
 	GtkWidget *dialog;
-	const char* helpuri;
-	char* helpprefix;
+	char* helpuri;
+	const char* helpprefix;
 	const char* name = gtk_action_get_name (action);
 
 	error = NULL;
@@ -737,7 +737,7 @@ nemo_window_initialize_go_menu (NemoWindow *window)
 {
 	GtkUIManager *ui_manager;
 	GtkWidget *menuitem;
-	int i;
+	size_t i;
 
 	ui_manager = nemo_window_get_ui_manager (NEMO_WINDOW (window));
 
