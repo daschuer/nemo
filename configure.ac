@@ -257,6 +257,7 @@ extra_warn_flags="\
 	-Werror=unused-function\
 	-Werror=unused-variable\
 	-Wno-declaration-after-statement\
+	-Wno-deprecated-declarations\
 	"
 
 AX_COMPILER_FLAGS([WARN_CFLAGS],[WARN_LDFLAGS],[$ax_is_release],[],[$extra_warn_flags])
