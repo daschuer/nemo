@@ -1368,6 +1368,7 @@ lay_down_icons_horizontal (NemoCanvasContainer *container,
 	double max_text_width, max_icon_width;
 	int icon_width;
 	int i;
+	int num_columns;
 	GtkAllocation allocation;
 
 	g_assert (NEMO_IS_CANVAS_CONTAINER (container));
@@ -1397,7 +1398,11 @@ lay_down_icons_horizontal (NemoCanvasContainer *container,
 
 		grid_width = max_icon_width + max_text_width + ICON_PAD_LEFT + ICON_PAD_RIGHT;
 	} else {
-		grid_width = STANDARD_ICON_GRID_WIDTH;
+		num_columns = floor(canvas_width / STANDARD_ICON_GRID_WIDTH);
+		num_columns = fmax(num_columns, 1);
+		/* Minimum of one column */
+		grid_width = canvas_width / num_columns - 1;
+		/* -1 prevents jitter */
 	}
 
 	line_width = container->details->label_position == NEMO_CANVAS_LABEL_POSITION_BESIDE ? ICON_PAD_LEFT : 0;
