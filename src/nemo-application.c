@@ -422,6 +422,7 @@ open_window (NemoApplication *application,
 	     GFile *location, const char *geometry)
 {
 	NemoWindow *window;
+	gboolean have_geometry;
 
 	nemo_profile_start (NULL);
 	window = nemo_application_create_window (application, gdk_screen_get_default ());
@@ -432,7 +433,9 @@ open_window (NemoApplication *application,
 		nemo_window_slot_go_home (nemo_window_get_active_slot (window), 0);
 	}
 
-	if (geometry != NULL && !gtk_widget_get_visible (GTK_WIDGET (window))) {
+	have_geometry = geometry != NULL && strcmp(geometry, "") != 0;
+
+	if (have_geometry && !gtk_widget_get_visible (GTK_WIDGET (window))) {
 		/* never maximize windows opened from shell if a
 		 * custom geometry has been requested.
 		 */
