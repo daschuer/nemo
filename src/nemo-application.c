@@ -464,6 +464,7 @@ open_window (NemoApplication *application,
 {
 	NemoWindow *window;
 	gchar *uri;
+	gboolean have_geometry;
 
 	uri = g_file_get_uri (location);
 	DEBUG ("Opening new window at uri %s", uri);
@@ -472,7 +473,9 @@ open_window (NemoApplication *application,
 						     screen);
 	nemo_window_go_to (window, location);
 
-	if (geometry != NULL && !gtk_widget_get_visible (GTK_WIDGET (window))) {
+	have_geometry = geometry != NULL && strcmp(geometry, "") != 0;
+
+	if (have_geometry && !gtk_widget_get_visible (GTK_WIDGET (window))) {
 		/* never maximize windows opened from shell if a
 		 * custom geometry has been requested.
 		 */
@@ -823,7 +826,11 @@ nemo_application_local_command_line (GApplication *application,
 	}
 	/* Invoke "Open" to create new windows */
 	if (len > 0) {
-		g_application_open (application, files, len, self->priv->geometry);
+		if (self->priv->geometry != NULL) {
+			g_application_open (application, files, len, self->priv->geometry);
+		} else {
+			g_application_open (application, files, len, "");
+		}
 	}
 
 	for (idx = 0; idx < len; idx++) {
