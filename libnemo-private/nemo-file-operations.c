@@ -91,7 +91,6 @@ typedef struct {
 	GIOSchedulerJob *io_job;	
 	GTimer *time;
 	GtkWindow *parent_window;
-	int screen_num;
     int monitor_num;
 	int inhibit_cookie;
 	NemoProgressInfo *progress;
@@ -1172,7 +1171,6 @@ init_common (gsize job_size,
 	     GtkWindow *parent_window)
 {
 	CommonJob *common;
-	GdkScreen *screen;
 
 	common = g_malloc0 (job_size);
 
@@ -1186,11 +1184,8 @@ init_common (gsize job_size,
 	common->cancellable = nemo_progress_info_get_cancellable (common->progress);
 	common->time = g_timer_new ();
 	common->inhibit_cookie = -1;
-	common->screen_num = 0;
     common->monitor_num = 0;
 	if (parent_window) {
-		screen = gtk_widget_get_screen (GTK_WIDGET (parent_window));
-		common->screen_num = gdk_screen_get_number (screen);
         common->monitor_num = nemo_desktop_utils_get_monitor_for_widget (GTK_WIDGET (parent_window));
 	}
 	
@@ -2937,7 +2932,10 @@ scan_file (GFile *file,
 	if (info) {
 		count_file (info, job, source_info);
 
-		if (g_file_info_get_file_type (info) == G_FILE_TYPE_DIRECTORY) {
+    		/* trashing operation doesn't recurse */
+    		if (g_file_info_get_file_type (info) == G_FILE_TYPE_DIRECTORY &&
+        		source_info->op != OP_KIND_TRASH)
+     		{
 			g_queue_push_head (dirs, g_object_ref (file));
 		}
 		
@@ -4468,12 +4466,6 @@ copy_move_file (CopyMoveJob *copy_job,
 		report_copy_progress (copy_job, source_info, transfer_info);
 
 		if (debuting_files) {
-			if (position) {
-				nemo_file_changes_queue_schedule_position_set (dest, *position, job->screen_num, job->monitor_num);
-			} else {
-				nemo_file_changes_queue_schedule_position_remove (dest);
-			}
-			
 			g_hash_table_replace (debuting_files, g_object_ref (dest), GINT_TO_POINTER (TRUE));
 		}
 		if (copy_job->is_move) {
@@ -5135,12 +5127,6 @@ move_file_prepare (CopyMoveJob *move_job,
 
 		nemo_file_changes_queue_file_moved (src, dest);
 
-		if (position) {
-			nemo_file_changes_queue_schedule_position_set (dest, *position, job->screen_num, job->monitor_num);
-		} else {
-			nemo_file_changes_queue_schedule_position_remove (dest);
-		}
-
 		if (job->undo_info != NULL) {
 			nemo_file_undo_info_ext_add_origin_target_pair (NEMO_FILE_UNDO_INFO_EXT (job->undo_info),
 									    src, dest);
@@ -5644,11 +5630,6 @@ link_file (CopyMoveJob *job,
 		}
 		
 		nemo_file_changes_queue_file_added (dest);
-		if (position) {
-			nemo_file_changes_queue_schedule_position_set (dest, *position, common->screen_num, common->monitor_num);
-		} else {
-			nemo_file_changes_queue_schedule_position_remove (dest);
-		}
 
 		g_object_unref (dest);
 		
@@ -6408,7 +6389,7 @@ create_job (GIOSchedulerJob *io_job,
 		job->created_file = g_object_ref (dest);
 		nemo_file_changes_queue_file_added (dest);
 		if (job->has_position) {
-			nemo_file_changes_queue_schedule_position_set (dest, job->position, common->screen_num, common->monitor_num);
+			nemo_file_changes_queue_schedule_position_set (dest, job->position, common->monitor_num);
 		} else {
 			nemo_file_changes_queue_schedule_position_remove (dest);
 		}
