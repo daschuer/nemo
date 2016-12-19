@@ -150,7 +150,7 @@ void                 nemo_window_report_load_underway  (NemoWindow *window,
                                                             NemoView *view);
 void                 nemo_window_view_visible          (NemoWindow *window,
                                                             NemoView *view);
-NemoWindowSlot * nemo_window_get_active_slot       (NemoWindow *window);
+NemoWindowSlot *     nemo_window_get_active_slot       (NemoWindow *window);
 GList *              nemo_window_get_panes             (NemoWindow *window);
 void                 nemo_window_push_status           (NemoWindow *window,
                                                             const char *text);

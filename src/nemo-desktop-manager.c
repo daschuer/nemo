@@ -11,6 +11,8 @@
 #include <libnemo-private/nemo-global-preferences.h>
 #include <libnemo-private/nemo-desktop-utils.h>
 
+static gboolean layout_changed (NemoDesktopManager *manager);
+
 G_DEFINE_TYPE (NemoDesktopManager, nemo_desktop_manager, G_TYPE_OBJECT);
 
 #define DESKTOPS_ON_PRIMARY "true::false"
@@ -46,6 +48,27 @@ close_all_windows (NemoDesktopManager *manager)
 }
 
 static void
+queue_update_layout (NemoDesktopManager *manager)
+{
+    if (manager->update_layout_idle_id > 0) {
+        g_source_remove (manager->update_layout_idle_id);
+        manager->update_layout_idle_id = 0;
+    }
+
+    manager->update_layout_idle_id = g_idle_add ((GSourceFunc) layout_changed, manager);
+}
+
+static void
+on_window_scale_changed (GtkWidget          *window,
+                         GParamSpec         *pspec,
+                         NemoDesktopManager *manager)
+{
+    manager->scale_factor_changed_id = 0;
+
+    queue_update_layout (manager);
+}
+
+static void
 ensure_background_window (void)
 {
 	if (!g_strcmp0(g_getenv("XDG_CURRENT_DESKTOP"), "Unity")) {
@@ -70,7 +93,7 @@ create_new_desktop_window (NemoDesktopManager *manager,
                                      gboolean  primary,
                                      gboolean  show_desktop)
 {
-	GtkWidget *window;
+    GtkWidget *window;
 
     DesktopInfo *info = g_slice_new0 (DesktopInfo);
 
@@ -93,13 +116,20 @@ create_new_desktop_window (NemoDesktopManager *manager,
     gtk_widget_realize (GTK_WIDGET (window));
     gdk_flush ();
 
+    if (manager->scale_factor_changed_id == 0) {
+        manager->scale_factor_changed_id = g_signal_connect (window,
+                                                             "notify::scale-factor",
+                                                             G_CALLBACK (on_window_scale_changed),
+                                                             manager);
+    }
+
     gtk_application_add_window (GTK_APPLICATION (g_application_get_default ()),
                                 GTK_WINDOW (window));
 
     manager->desktops = g_list_append (manager->desktops, info);
 }
 
-static void
+static gboolean
 layout_changed (NemoDesktopManager *manager)
 {
     gint n_monitors = 0;
@@ -107,11 +137,13 @@ layout_changed (NemoDesktopManager *manager)
     gboolean show_desktop_on_primary = FALSE;
     gboolean show_desktop_on_remaining = FALSE;
 
+    manager->update_layout_idle_id = 0;
+
     close_all_windows (manager);
 
     NemoApplication *app = NEMO_APPLICATION (g_application_get_default ());
     if (!nemo_application_get_show_desktop (app)) {
-        return;
+        return FALSE;
     }
 
     ensure_background_window ();
@@ -155,50 +187,8 @@ layout_changed (NemoDesktopManager *manager)
 
     g_free (pref);
     g_strfreev (pref_split);
-}
 
-static GdkFilterReturn
-gdk_filter_func (GdkXEvent *gdk_xevent,
-                  GdkEvent *event,
-                   gpointer data)
-{
-    XEvent *xevent = gdk_xevent;
-    NemoDesktopManager *manager;
-
-    manager = NEMO_DESKTOP_MANAGER (data);
-
-    switch (xevent->type) {
-        case PropertyNotify:
-            if (xevent->xproperty.atom == gdk_x11_get_xatom_by_name ("_NET_WORKAREA"))
-                layout_changed (manager);
-            break;
-        default:
-            break;
-    }
-
-    return GDK_FILTER_CONTINUE;
-}
-
-static void
-remove_workarea_filter (NemoDesktopManager *manager)
-{
-    gdk_window_remove_filter (manager->root_window,
-                              gdk_filter_func,
-                              manager);
-    manager->root_window = NULL;
-}
-
-static void
-add_workarea_filter (NemoDesktopManager *manager)
-{
-    GdkWindow *root_window = gdk_screen_get_root_window (manager->screen);
-
-    manager->root_window = root_window;
-
-    gdk_window_set_events (root_window, GDK_PROPERTY_CHANGE_MASK);
-    gdk_window_add_filter (root_window,
-                           gdk_filter_func,
-                           manager);
+    return FALSE;
 }
 
 static void
@@ -231,29 +221,28 @@ nemo_desktop_manager_constructed (GObject *object)
     NemoDesktopManager *manager = NEMO_DESKTOP_MANAGER (object);
 
     manager->screen = gdk_screen_get_default ();
+    manager->update_layout_idle_id = 0;
 
     manager->show_desktop_changed_id = g_signal_connect_swapped (nemo_desktop_preferences, 
                                                                  "changed::" NEMO_PREFERENCES_SHOW_DESKTOP,
-                                                                 G_CALLBACK (layout_changed),
+                                                                 G_CALLBACK (queue_update_layout),
                                                                  manager);
 
     manager->desktop_layout_changed_id = g_signal_connect_swapped (nemo_desktop_preferences,
                                                                    "changed::" NEMO_PREFERENCES_DESKTOP_LAYOUT,
-                                                                   G_CALLBACK (layout_changed),
+                                                                   G_CALLBACK (queue_update_layout),
                                                                    manager);
 
     manager->size_changed_id = g_signal_connect_swapped (manager->screen,
                                                          "size_changed",
-                                                         G_CALLBACK (layout_changed),
+                                                         G_CALLBACK (queue_update_layout),
                                                          manager);
 
 
     manager->orphaned_icon_handling_id = g_signal_connect_swapped (nemo_preferences,
                                                                    "changed::" NEMO_PREFERENCES_SHOW_ORPHANED_DESKTOP_ICONS,
-                                                                   G_CALLBACK (layout_changed),
+                                                                   G_CALLBACK (queue_update_layout),
                                                                    manager);
-
-    add_workarea_filter (manager);
 
     layout_changed (manager);
 }
@@ -270,8 +259,6 @@ nemo_desktop_manager_dispose (GObject *object)
     g_signal_handler_disconnect (nemo_desktop_preferences, manager->desktop_layout_changed_id);
     g_signal_handler_disconnect (manager->screen, manager->size_changed_id);
     g_signal_handler_disconnect (manager->screen, manager->orphaned_icon_handling_id);
-
-    remove_workarea_filter (manager);
 
     G_OBJECT_CLASS (nemo_desktop_manager_parent_class)->dispose (object);
 }
@@ -302,6 +289,9 @@ nemo_desktop_manager_init (NemoDesktopManager *self)
     self->size_changed_id = 0;
     self->desktop_layout_changed_id = 0;
     self->show_desktop_changed_id = 0;
+    self->cinnamon_panel_layout_changed_id = 0;
+    self->orphaned_icon_handling_id = 0;
+    self->scale_factor_changed_id = 0;
 
     self->desktops = NULL;
 
