@@ -202,6 +202,61 @@ gdk_filter_func (GdkXEvent *gdk_xevent,
     return GDK_FILTER_CONTINUE;
 }
 
+static void
+update_margins (NemoDesktopCanvasView *canvas_view)
+{
+    NemoCanvasContainer *canvas_container;
+    GdkRectangle geometry, work_rect;
+    gint current_monitor;
+
+    canvas_container = get_canvas_container (canvas_view);
+    current_monitor = nemo_desktop_utils_get_monitor_for_widget (GTK_WIDGET (canvas_view));
+
+    /* _NET_WORKAREA only applies to the primary monitor - use it to adjust
+       container margins on the primary icon container only.  For any others,
+       add a sane amount of padding for any likely chrome. */
+
+    if (current_monitor != nemo_desktop_utils_get_primary_monitor ()) {
+        nemo_canvas_container_set_margins (canvas_container, 50, 50, 50, 50);
+        return;
+    }
+
+    nemo_desktop_utils_get_monitor_geometry (current_monitor, &geometry);
+    nemo_desktop_utils_get_monitor_work_rect (current_monitor, &work_rect);
+
+    gint l, r, t, b;
+
+    l = work_rect.x - geometry.x;
+    r = (geometry.x + geometry.width) - (work_rect.x + work_rect.width);
+    t = work_rect.y - geometry.y;
+    b = (geometry.y + geometry.height) - (work_rect.y + work_rect.height);
+
+    nemo_canvas_container_set_margins (canvas_container, l, r, t, b);
+}
+
+static GdkFilterReturn
+gdk_filter_func (GdkXEvent *gdk_xevent,
+                 GdkEvent  *event,
+                 gpointer   data)
+{
+    XEvent *xevent = gdk_xevent;
+    NemoDesktopCanvasView *canvas_view;
+
+    canvas_view = NEMO_DESKTOP_CANVAS_VIEW (data);
+
+    switch (xevent->type) {
+        case PropertyNotify:
+            if (xevent->xproperty.atom == gdk_x11_get_xatom_by_name ("_NET_WORKAREA")) {
+                update_margins (canvas_view);
+            }
+            break;
+        default:
+            break;
+    }
+
+    return GDK_FILTER_CONTINUE;
+}
+
 static const char *
 real_get_id (NemoView *view)
 {
