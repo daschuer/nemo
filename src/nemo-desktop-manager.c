@@ -93,7 +93,7 @@ create_new_desktop_window (NemoDesktopManager *manager,
                                      gboolean  primary,
                                      gboolean  show_desktop)
 {
-	GtkWidget *window;
+    GtkWidget *window;
 
     DesktopInfo *info = g_slice_new0 (DesktopInfo);
 
