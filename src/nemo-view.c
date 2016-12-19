@@ -1992,10 +1992,6 @@ new_folder_done (GFile *new_folder,
 
 	
 	file = nemo_file_get (new_folder);
-	nemo_file_set_metadata
-		(file, NEMO_METADATA_KEY_SCREEN,
-		 NULL,
-		 screen_string);
 
 	if (data->selection != NULL) {
 		NewFolderSelectionData *sdata;
