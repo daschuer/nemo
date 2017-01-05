@@ -384,7 +384,7 @@ nemo-$VERSION:
 	libexif support:	${enable_exif}
 	libexempi support:	${enable_xmp}
 	PackageKit support:     $msg_packagekit
-	nautilus-sendto ext:	$enable_nst_extension
+	nemo-sendto ext:	$enable_nst_extension
 	Tracker support:	$build_tracker
 	Zeitgeist logging: 	$build_zeitgeist
 

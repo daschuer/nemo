@@ -1451,7 +1451,7 @@ create_content_view (NemoWindowSlot *slot,
 	if (NEMO_IS_SEARCH_DIRECTORY (old_directory) &&
 	    !NEMO_IS_SEARCH_DIRECTORY (new_directory)) {
 		/* Reset the search_active state when going out of a search directory,
-		 * before nautilus_window_slot_sync_search_widgets() is called
+		 * before nemo_window_slot_sync_search_widgets() is called
 		 * if we're not being loaded with search visible.
 		 */
 		if (!slot->details->load_with_search) {
@@ -2495,7 +2495,7 @@ location_has_really_changed (NemoWindowSlot *slot)
 	/* Switch to the new content view.
 	 * Destroy the extra location widgets first, since they might hold
 	 * a pointer to the old view, which will possibly be destroyed inside
-	 * nautilus_window_slot_switch_new_content_view().
+	 * nemo_window_slot_switch_new_content_view().
 	 */
 	nemo_window_slot_remove_extra_location_widgets (slot);
 	nemo_window_slot_switch_new_content_view (slot);

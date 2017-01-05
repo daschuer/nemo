@@ -94,7 +94,7 @@ main (int argc, char *argv[])
 	xmp_init();
 #endif
 
-	/* Run the nautilus application. */
+	/* Run the nemo application. */
 	application = nemo_application_new ();
 
 	/* hold indefinitely if we're asked to persist */

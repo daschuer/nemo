@@ -315,7 +315,7 @@ nemo_application_close_all_windows (NemoApplication *self)
 	GList *l;
 	GList *windows;
 
-	/* nautilus_window_close() doesn't do anything for desktop windows */
+	/* nemo_window_close() doesn't do anything for desktop windows */
 	windows = gtk_application_get_windows (GTK_APPLICATION (self));
 	/* make a copy, since the original list will be modified when destroying
 	 * a window, making this list invalid */

@@ -1,7 +1,7 @@
 [Desktop Entry]
 _Name=Connect to Server
 TryExec=nemo-connect-server
-Exec=nautilus-connect-server
+Exec=nemo-connect-server
 Icon=applications-internet
 NoDisplay=true
 Terminal=false

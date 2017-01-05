@@ -138,7 +138,7 @@ nemo_global_preferences_init (void)
 	nemo_list_view_preferences = g_settings_new("org.nemo.list-view");
 	nemo_compact_view_preferences = g_settings_new("org.nemo.compact-view");
 	nemo_desktop_preferences = g_settings_new("org.nemo.desktop");
-        /* Some settings such as show hidden files are shared between Nautilus and GTK file chooser */
+        /* Some settings such as show hidden files are shared between Nemo and GTK file chooser */
         gtk_filechooser_preferences = g_settings_new_with_path ("org.gtk.Settings.FileChooser",
                                                                 "/org/gtk/settings/file-chooser/");
 	nemo_tree_sidebar_preferences = g_settings_new("org.nemo.sidebar-panels.tree");
