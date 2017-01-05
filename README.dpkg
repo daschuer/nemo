@@ -1,14 +1,35 @@
 rm debian/control 
+rm debian/changelog
 cp debian/control.trusty debian/control
+cp debian/changelog.trusty debian/changelog
 dpkg-buildpackage -S -sa -rfakeroot
 
-rm debian/control; cp debian/control.trusty debian/control; dpkg-buildpackage -S -sa -rfakeroot;
+rm debian/control; rm debian/changelog; cp debian/control.trusty debian/control; cp debian/changelog.trusty debian/changelog; dpkg-buildpackage -S -sa -rfakeroot
 
 
 rm debian/control 
+rm debian/changelog
+cp debian/control.xenial debian/control
+cp debian/changelog.xenial debian/changelog
+dpkg-buildpackage -S -sa -rfakeroot
+
+rm debian/control; rm debian/changelog; cp debian/control.xenial debian/control; cp debian/changelog.xenial debian/changelog; dpkg-buildpackage -S -sa -rfakeroot
+
+
+rm debian/control 
+rm debian/changelog
 cp debian/control.trusty_cinnamon debian/control
+cp debian/changelog.trusty debian/changelog
+dpkg-buildpackage -S -sa -rfakeroot
+
+rm debian/control; rm debian/changelog; cp debian/control.trusty_cinnamon debian/control; cp debian/changelog.trusty debian/changelog; dpkg-buildpackage -S -sa -rfakeroot
+
+
+rm debian/control 
+rm debian/changelog
+cp debian/control.xenial_cinnamon debian/control
+cp debian/changelog.xenial debian/changelog
 dpkg-buildpackage -S -sa -rfakeroot
 cp debian/control.trusty debian/control
 
-rm debian/control; cp debian/control.trusty_cinnamon debian/control; dpkg-buildpackage -S -sa -rfakeroot; cp debian/control.trusty debian/control
-
+rm debian/control; rm debian/changelog; cp debian/control.xenial_cinnamon debian/control;  cp debian/changelog.xenial debian/changelog; dpkg-buildpackage -S -sa -rfakeroot; cp debian/control.trusty debian/control
