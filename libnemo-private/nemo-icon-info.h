@@ -87,7 +87,7 @@ guint nemo_get_icon_size_for_zoom_level          (NemoZoomLevel  zoom_level);
 guint nemo_get_list_icon_size_for_zoom_level     (NemoZoomLevel  zoom_level);
 
 gint  nemo_get_icon_size_for_stock_size          (GtkIconSize        size);
-gint nemo_icon_get_emblem_size_for_icon_size    (guint              size);
+guint nemo_icon_get_emblem_size_for_icon_size    (guint              size);
 
 gboolean nemo_icon_theme_can_render              (GThemedIcon *icon);
 

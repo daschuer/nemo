@@ -676,7 +676,7 @@ nemo_get_icon_size_for_stock_size (GtkIconSize size)
 }
 
 
-gint
+guint
 nemo_icon_get_emblem_size_for_icon_size (guint size)
 {
 	if (size >= 96)

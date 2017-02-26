@@ -33,7 +33,6 @@
 #include "nemo-view-factory.h"
 #include "nemo-window.h"
 #include "nemo-desktop-window.h"
-#include "nemo-desktop-manager.h"
 #include "nemo-application.h"
 #include "nemo-desktop-manager.h"
 #include "nemo-application.h"

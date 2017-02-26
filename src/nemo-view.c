@@ -183,7 +183,6 @@ static int scripts_directory_uri_length;
 
 struct NemoViewDetails
 {
-	NemoWindow *window;
 	NemoWindowSlot *slot;
 	NemoDirectory *model;
 	NemoFile *directory_as_file;
@@ -8962,18 +8961,14 @@ file_should_show_foreach (NemoFile        *file,
 			  gboolean            *show_mount,
 			  gboolean            *show_unmount,
 			  gboolean            *show_eject,
-			  gboolean            *show_connect,
 			  gboolean            *show_start,
 			  gboolean            *show_stop,
 			  gboolean            *show_poll,
 			  GDriveStartStopType *start_stop_type)
 {
-	char *uri;
-
 	*show_mount = FALSE;
 	*show_unmount = FALSE;
 	*show_eject = FALSE;
-	*show_connect = FALSE;
 	*show_start = FALSE;
 	*show_stop = FALSE;
 	*show_poll = FALSE;
@@ -9005,19 +9000,6 @@ file_should_show_foreach (NemoFile        *file,
 	}
 
 	*start_stop_type = nemo_file_get_start_stop_type (file);
-
-	if (nemo_file_is_nemo_link (file)) {
-		uri = nemo_file_get_activation_uri (file);
-		if (uri != NULL &&
-		    (g_str_has_prefix (uri, "ftp:") ||
-		     g_str_has_prefix (uri, "ssh:") ||
-		     g_str_has_prefix (uri, "sftp:") ||
-		     g_str_has_prefix (uri, "dav:") ||
-		     g_str_has_prefix (uri, "davs:"))) {
-			*show_connect = TRUE;
-		}
-		g_free (uri);
-	}
 }
 
 static void
@@ -9235,7 +9217,6 @@ real_update_menus_volumes (NemoView *view,
 	gboolean show_mount;
 	gboolean show_unmount;
 	gboolean show_eject;
-	gboolean show_connect;
 	gboolean show_start;
 	gboolean show_stop;
 	gboolean show_poll;
@@ -9252,7 +9233,6 @@ real_update_menus_volumes (NemoView *view,
 	show_mount = (selection != NULL);
 	show_unmount = (selection != NULL);
 	show_eject = (selection != NULL);
-	show_connect = (selection != NULL && selection_count == 1);
 	show_start = (selection != NULL && selection_count == 1);
 	show_stop = (selection != NULL && selection_count == 1);
 	show_poll = (selection != NULL && selection_count == 1);
@@ -9260,14 +9240,13 @@ real_update_menus_volumes (NemoView *view,
 	self_start_stop_type = G_DRIVE_START_STOP_TYPE_UNKNOWN;
 
 	for (l = selection; l != NULL && (show_mount || show_unmount
-					  || show_eject || show_connect
+					  || show_eject
                                           || show_start || show_stop
 					  || show_poll);
 	     l = l->next) {
 		gboolean show_mount_one;
 		gboolean show_unmount_one;
 		gboolean show_eject_one;
-		gboolean show_connect_one;
 		gboolean show_start_one;
 		gboolean show_stop_one;
 		gboolean show_poll_one;
@@ -9277,7 +9256,6 @@ real_update_menus_volumes (NemoView *view,
 					  &show_mount_one,
 					  &show_unmount_one,
 					  &show_eject_one,
-					  &show_connect_one,
                                           &show_start_one,
                                           &show_stop_one,
 					  &show_poll_one,
@@ -9286,7 +9264,6 @@ real_update_menus_volumes (NemoView *view,
 		show_mount &= show_mount_one;
 		show_unmount &= show_unmount_one;
 		show_eject &= show_eject_one;
-		show_connect &= show_connect_one;
 		show_start &= show_start_one;
 		show_stop &= show_stop_one;
 		show_poll &= show_poll_one;
@@ -9463,7 +9440,6 @@ real_update_location_menu_volumes (NemoView *view)
 	gboolean show_mount;
 	gboolean show_unmount;
 	gboolean show_eject;
-	gboolean show_connect;
 	gboolean show_start;
 	gboolean show_stop;
 	gboolean show_poll;
@@ -9477,7 +9453,6 @@ real_update_location_menu_volumes (NemoView *view)
 				  &show_mount,
 				  &show_unmount,
 				  &show_eject,
-				  &show_connect,
 				  &show_start,
 				  &show_stop,
 				  &show_poll,
@@ -9839,6 +9814,7 @@ real_update_menus (NemoView *view)
 	GtkAction *action;
 	GAppInfo *app;
 	GIcon *app_icon;
+	// GtkWidget *menuitem;
 	gboolean next_pane_is_writable;
 	gboolean show_properties;
 

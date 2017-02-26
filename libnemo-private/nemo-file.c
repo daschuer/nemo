@@ -4736,7 +4736,7 @@ nemo_file_get_icon (NemoFile *file,
 
 		if (nemo_icon_info_is_fallback (icon)) {
 			g_object_unref (icon);
-			icon = nemo_icon_info_lookup (g_themed_icon_new ("text-x-generic"), size, scale);
+			icon = nemo_icon_info_lookup (get_default_file_icon (flags), size, scale);
 		}
 	}
 

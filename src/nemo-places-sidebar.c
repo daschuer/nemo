@@ -658,7 +658,7 @@ update_places (NemoPlacesSidebar *sidebar)
 	GVolume *volume;
 	int bookmark_count, bookmark_index = 0;
 	char *location, *mount_uri, *name, *last_uri, *identifier;
-	const char *mount_uri_c;
+    const char *mount_uri_c;
 	const gchar *bookmark_name;
 	GIcon *icon;
 	GFile *root;

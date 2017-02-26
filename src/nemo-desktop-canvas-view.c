@@ -93,6 +93,12 @@ static time_t desktop_dir_modify_time;
 #define POPUP_PATH_CANVAS_APPEARANCE		"/selection/Canvas Appearance Items"
 
 static void
+real_begin_loading (NemoView *object)
+{
+	NEMO_VIEW_CLASS (nemo_desktop_canvas_view_parent_class)->begin_loading (object);
+}
+
+static void
 update_margins (NemoDesktopCanvasView *canvas_view)
 {
     NemoCanvasContainer *canvas_container;
@@ -231,6 +237,7 @@ nemo_desktop_canvas_view_class_init (NemoDesktopCanvasViewClass *class)
 
 	G_OBJECT_CLASS (class)->dispose = nemo_desktop_canvas_view_dispose;
 
+	vclass->begin_loading = real_begin_loading;
 	vclass->merge_menus = real_merge_menus;
 	vclass->update_menus = real_update_menus;
 	vclass->get_view_id = real_get_id;
@@ -417,7 +424,6 @@ nemo_desktop_canvas_view_init (NemoDesktopCanvasView *desktop_canvas_view)
 	nemo_view_set_show_foreign (NEMO_VIEW (desktop_canvas_view),
 					FALSE);
 	
-	/* Set our default layout mode */
 	/* Set our default layout mode */
 	nemo_canvas_container_set_layout_mode (canvas_container,
 						 gtk_widget_get_direction (GTK_WIDGET(canvas_container)) == GTK_TEXT_DIR_RTL ?

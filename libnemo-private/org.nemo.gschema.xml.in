@@ -474,8 +474,8 @@
     </key>
     <key name="show-desktop-icons" type="b">
       <default>true</default>
-      <_summary>Deprecated: Allow Nemo to manage the desktop</_summary>
-      <_description>Deprecated: If this is set to true, Nemo will autostart and manage the desktop</_description>
+      <_summary>Allow Nemo to manage the desktop</_summary>
+      <_description>If this is set to true, Nemo will autostart and manage the desktop</_description>
     </key>
     <key name="home-icon-visible" type="b">
       <default>false</default>

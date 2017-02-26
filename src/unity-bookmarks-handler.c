@@ -34,8 +34,6 @@
 #include <eel/eel-string.h>
 #include <gdk/gdkx.h>
 
-#include <gdk/gdkx.h>
-
 static UnityQuicklistHandler* unity_quicklist_handler = NULL;
 static NemoBookmarkList* bookmarks = NULL;
 
