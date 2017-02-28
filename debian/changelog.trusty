@@ -1,3 +1,9 @@
+nemo (3.2.2.37-daschuertrusty) trusty; urgency=low
+  
+  * Added Nautilus modified column patches
+
+ -- Daniel Schürmann <daschuer@gmx.de>  Mon, 20 Dec 2016 22:57:13 +0000
+
 nemo (3.2.2.36-daschuertrusty) trusty; urgency=low
   
   * Trusty Verison
